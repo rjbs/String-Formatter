@@ -1,7 +1,7 @@
 package String::Format;
 
 # ----------------------------------------------------------------------
-# $Id: Format.pm,v 1.1 2003/03/06 19:10:14 dlc Exp $
+# $Id: Format.pm,v 1.2 2003/03/06 19:12:04 dlc Exp $
 # ----------------------------------------------------------------------
 #  Copyright (C) 2002 darren chamberlain <darren@cpan.org>
 #
@@ -21,73 +21,122 @@ package String::Format;
 # -------------------------------------------------------------------
 
 use strict;
-use vars qw($VERSION @EXPORT);
+use vars qw($VERSION @EXPORT $MARKER);
 use Exporter;
 use base qw(Exporter);
 
-$VERSION = sprintf "%d.%02d", q$Revision: 1.1 $ =~ /(\d+)\.(\d+)/;
-@EXPORT = qw(stringf);
+use Carp qw(carp);
 
-sub _replace {
-    my ($args, $orig, $alignment, $min_width,
-        $max_width, $passme, $formchar) = @_;
+$VERSION = 1.14;
+@EXPORT  = qw(stringf);
+$MARKER  = '%' unless defined $MARKER;
 
-    # For unknown escapes, return the orignial
-    return $orig unless defined $args->{$formchar};
+# ----------------------------------------------------------------------
+# fmt($marker, $string);
+#
+# fmt takes a marker and a format string and returns a 2-element list,
+# consisting of a sprintf format string and a reference to an array
+# of arrays.  This AoA contains sequences, one per format character in
+# the original string; each contains two elements: the actual format
+# character (for lookups into the hash containing corresponding
+# values) and the contents of any '{'...'}' stuff (which, if defined,
+# will be passed to the sub reference contained in the hash, if it is
+# a sub reference, which is usually will not be).
+#
+# It is intenteded to be invoked only by the stringf function.
+#
+# For example, the following invocation:
+#
+#   fmt("%", "Hello, %w!");
+#
+# Returns:
+#
+#   ("Hello, %s!", [ [ 'w', undef ], ])
+#
+# But a more complex invocation:
+#
+#   fmt("%", "My %-10.10{foo}a is on fire");
+#
+# Returns:
+#
+#   ("My %-10.10s is on fire", [ [ 'a', 'foo' ] ]);
+#
+# More examples:
+#
+#   fmt("#", "#a, #b, and #c");
+#   ("%s, %s, and %s", [ [ 'a' => undef ], [ 'b' => undef ], [ 'c' => undef ] ]);
+#
+#   fmt("%", "%{%Y/%m/%d}d");
+#   ("%s", [ [ 'd' => '%Y/%m/%d' ] ]);
+#
+# Clear as mud?
+# ----------------------------------------------------------------------
+sub fmt {
+    my ($marker, $fmt) = @_;
+    my @ret;
 
-    $alignment = '+' unless defined $alignment;
+    $fmt =~ s/([^$marker]*)              # leading text                      $1
+               (?:
+                ($marker)                 # marker                            $2
+                ([-])?                    # (optional) alignment              $3
+                ([ 0])?                   # (optional) padder                 $4
+                (\d*)?                    # (optional) minimum field width    $5
+                (?:\.(\d*))?              # (optional) maximum field width    $6
+                (?:\{([^$marker]*?)\})?   # (optional) stuff inside           $7
+                (\S)                      # actual format character           $8
+               )?
+            /
+        my ($m, $f);
+        warn join "\n",
+            "\$1 => '$1'",
+            "\$2 => '$2'",
+            "\$3 => '$3'",
+            "\$4 => '$4'",
+            "\$5 => '$5'",
+            "\$6 => '$6'",
+            "\$7 => '$7'",
+            "\$8 => '$8'",
+            "",
+            "";
 
-    my $replacement = $args->{$formchar};
-    if (ref $replacement eq 'CODE') {
-        # $passme gets passed to subrefs.
-        $passme ||= "";
-        $passme =~ tr/{}//d;
-        $replacement = $replacement->($passme);
-    }
+        if (length "$1") {
+            if ($8 eq $marker) {
+                $m = $marker eq '%' ? "$1%%" : "$1$marker";
+            }
 
-    my $replength = length $replacement;
-    $min_width  ||= $replength;
-    $max_width  ||= $replength;
+            $f = join '' => 
+                (defined $3 ?  "$3" : ''),  # alignment  
+                (defined $4 ?  "$4" : ''),  # padding
+                (defined $5 ?  "$5" : ''),  # min width
+                (defined $6 ?  "$6" : ''),  # max width
+                's';
 
-    # length of replacement is between min and max
-    if (($replength > $min_width) && ($replength < $max_width)) {
-        return $replacement;
-    }
+            push @ret, [ "$8", "$7" ]
+                if length "$8";
 
-    # length of replacement is longer than max; truncate
-    if ($replength > $max_width) {
-        return substr($replacement, 0, $max_width);
-    }
-    
-    # length of replacement is less than min: pad
-    if ($alignment eq '-') {
-        # left align; pad in front
-        return $replacement . " " x ($min_width - $replength);
-    }
+            "$1%$m$f"
+        } else {
+            ""
+        }
+    /gex;
 
-    # right align, pad at end
-    return " " x ($min_width - $replength) . $replacement;
+    return ($fmt, \@ret);
 }
 
-my $regex = qr/
-               (%             # leading '%'
-                (-)?          # left-align, rather than right
-                (\d*)?        # (optional) minimum field width
-                (?:\.(\d*))?  # (optional) maximum field width
-                ({.*?})?      # (optional) stuff inside
-                (\S)          # actual format character
-             )/x;
 sub stringf {
-    my $format = shift || return;
-    my $args = UNIVERSAL::isa($_[0], 'HASH') ? shift : { @_ };
-       $args->{'n'} = "\n" unless defined $args->{'n'};
-       $args->{'t'} = "\t" unless defined $args->{'t'};
-       $args->{'%'} = "%"  unless defined $args->{'%'};
+    my $fmt = shift || return;
+    my $hash = ref $_[0] eq 'HASH' ? shift : { @_ };
+    my $marker = delete $hash->{'marker'} || $MARKER;
+    my ($sfmt, $arr) = fmt($marker, $fmt);
 
-    $format =~ s/$regex/_replace($args, $1, $2, $3, $4, $5, $6)/ge;
-
-    return $format;
+    sprintf $sfmt, map { defined $hash->{$_->[0]}
+                         ? ref($hash->{$_->[0]}) eq 'CODE'
+                           ? $hash->{$_->[0]}->($_->[1])
+                           : $hash->{$_->[0]}
+                         : "$marker$_->[0]"
+                        } @$arr;
 }
+
 
 sub stringfactory {
     shift;  # It's a class method, but we don't actually want the class
@@ -105,17 +154,13 @@ arbitrary format definitions
 
 =head1 ABSTRACT
 
-String::Format allows for sprintf-style formatting capabilities with
-arbitrary format definitions
+Process sprintf-style formats with arbitrary format definitions
 
 =head1 SYNOPSIS
 
-  # In a script invoked as:
-  # script.pl -f "I like %a, %b, and %g, but not %m or %w."
-
   use String::Format;
-  use Getopt::Std;
 
+  my $fmt = "I like %a, %b, and %g, but not %m or %w.";
   my %fruit = (
         'a' => "apples",
         'b' => "bannanas",
@@ -124,21 +169,19 @@ arbitrary format definitions
         'w' => "watermelons",
   );
 
-  use vars qw($opt_f);
-  getopt("f");
-
-  print stringf($opt_f, %fruit);
+  print stringf $fmt, \%fruit;
   
   # prints:
   # I like apples, bannanas, and grapefruits, but not melons or watermelons.
 
 =head1 DESCRIPTION
 
-String::Format lets you define arbitrary printf-like format sequences
+String::Format lets you define arbitrary sprintf-like format sequences
 to be expanded.  This module would be most useful in configuration
 files and reporting tools, where the results of a query need to be
 formatted in a particular way.  It was inspired by mutt's index_format
-and related directives (see <URL:http://www.mutt.org/doc/manual/manual-6.html#index_format>).
+and related directives (see
+<URL:http://www.mutt.org/doc/manual/manual-6.html#index_format>).
 
 =head1 FUNCTIONS
 
@@ -154,7 +197,7 @@ pairs are what will be expanded in the format string.
 Format strings must match the following regular expression:
 
   qr/
-     (%             # leading '%'
+     ($MARKER       # leading '%'
       (-)?          # left-align, rather than right
       (\d*)?        # (optional) minimum field width
       (?:\.(\d*))?  # (optional) maximum field width
@@ -163,9 +206,10 @@ Format strings must match the following regular expression:
      )/x;
 
 If the escape character specified does not exist in %args, then the
-original string is used.  The alignment, minimum width, and maximum
-width options function identically to how they are defined in
-sprintf(3) (any variation is a bug, and should be reported).
+original string is used, including $MARKER.  The alignment, minimum
+width, and maximum width options function identically to how they are
+defined in sprintf(3) (any variation is a bug, and should be
+reported; see L<"REPORTING BUGS">).
 
 Note that Perl's sprintf definition is a little more liberal than the
 above regex; the deviations were intentional, and all deal with
@@ -183,17 +227,17 @@ subroutine reference.  This allows for entries such as this:
 
 Which can be invoked with this format string:
 
-  "It is %{%M:%S}d right now, on %{%A, %B %e}d."
+  "It is %{%H:%M}d right now, on %{%A, %B %e}d."
 
 And result in (for example):
 
-  It is 17:45 right now, on Monday, February 4.
+  It is 07:29 right now, on Thursday, January 16.
 
 Note that since the string is passed unmolested to the subroutine
 reference, and strftime would Do The Right Thing with this data, the
-above format string could be written as:
+above format string could also be written as:
 
-  "It is %{%M:%S right now, on %A, %B %e}d."
+  "It is %{%H:%M right now, on %A, %B %e}d."
 
 By default, the formats 'n', 't', and '%' are defined to be a newline,
 tab, and '%', respectively, if they are not already defined in the
@@ -205,6 +249,12 @@ returns simply:
 Because of how the string is parsed, the normal "\n" and "\t" are
 turned into two characters each, and are not treated as a newline and
 tab.  This is a bug.
+
+=head1 CHANGING THE FORMAT MARKER
+
+The package global $MARKER defines the special character that
+C<stringf> uses to determine whether a format is found or not; by
+default, $MARKER is set to '%', but it can be set to anything else.
 
 =head1 FACTORY METHOD
 
@@ -232,6 +282,41 @@ entry, and called normally, of course:
 
   my $reformed = reformat($format_string);
 
+Formatting methods can be added to packages using symbol table trickery:
+
+  package My::Config;
+  use String::Format ();
+
+  my %generic_formats = (
+      ....
+  );
+
+  my %index_format = (
+      %generic_formats,
+      ...
+  );
+
+  my %status_format = (
+      %generic_formats,
+      ...
+  );
+
+  *index_format = String::Format->stringfactory(\%index_formats);
+  *status_format = String::Format->stringfactory(\%status_format)
+
+These can then be used:
+
+  use My::Config;
+
+  my $cfg = My::Config->new();
+
+  print $cfg->index_format("Hello, %w");
+
+=head1 REPORTING BUGS
+
+Please report all bugs the the String::Format RT queue at
+E<lt>https://rt.cpan.org/E<gt>.
+
 =head1 AUTHOR
 
-darren chamberlain <darren@cpan.org>
+darren chamberlain E<lt>darren@cpan.orgE<gt>
