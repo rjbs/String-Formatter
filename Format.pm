@@ -1,7 +1,7 @@
 package String::Format;
 
 # ----------------------------------------------------------------------
-# $Id: Format.pm,v 1.2 2003/03/06 19:12:04 dlc Exp $
+# $Id: Format.pm,v 1.3 2003/03/27 20:01:12 dlc Exp $
 # ----------------------------------------------------------------------
 #  Copyright (C) 2002 darren chamberlain <darren@cpan.org>
 #
@@ -32,9 +32,9 @@ $VERSION = 1.14;
 $MARKER  = '%' unless defined $MARKER;
 
 # ----------------------------------------------------------------------
-# fmt($marker, $string);
+# mkfmt($marker, $string);
 #
-# fmt takes a marker and a format string and returns a 2-element list,
+# mkfmt takes a marker and a format string and returns a 2-element list,
 # consisting of a sprintf format string and a reference to an array
 # of arrays.  This AoA contains sequences, one per format character in
 # the original string; each contains two elements: the actual format
@@ -47,7 +47,7 @@ $MARKER  = '%' unless defined $MARKER;
 #
 # For example, the following invocation:
 #
-#   fmt("%", "Hello, %w!");
+#   mkfmt("%", "Hello, %w!");
 #
 # Returns:
 #
@@ -55,7 +55,7 @@ $MARKER  = '%' unless defined $MARKER;
 #
 # But a more complex invocation:
 #
-#   fmt("%", "My %-10.10{foo}a is on fire");
+#   mkfmt("%", "My %-10.10{foo}a is on fire");
 #
 # Returns:
 #
@@ -63,15 +63,17 @@ $MARKER  = '%' unless defined $MARKER;
 #
 # More examples:
 #
-#   fmt("#", "#a, #b, and #c");
+#   mkfmt("#", "#a, #b, and #c");
 #   ("%s, %s, and %s", [ [ 'a' => undef ], [ 'b' => undef ], [ 'c' => undef ] ]);
 #
-#   fmt("%", "%{%Y/%m/%d}d");
+#   mkfmt("%", "%{%Y/%m/%d}d");
 #   ("%s", [ [ 'd' => '%Y/%m/%d' ] ]);
 #
 # Clear as mud?
+#
+# mkfmt is self-contained because it will (hopefully) be written in XS.
 # ----------------------------------------------------------------------
-sub fmt {
+sub mkfmt {
     my ($marker, $fmt) = @_;
     my @ret;
 
@@ -127,7 +129,7 @@ sub stringf {
     my $fmt = shift || return;
     my $hash = ref $_[0] eq 'HASH' ? shift : { @_ };
     my $marker = delete $hash->{'marker'} || $MARKER;
-    my ($sfmt, $arr) = fmt($marker, $fmt);
+    my ($sfmt, $arr) = mkfmt($marker, $fmt);
 
     sprintf $sfmt, map { defined $hash->{$_->[0]}
                          ? ref($hash->{$_->[0]}) eq 'CODE'
@@ -146,6 +148,23 @@ sub stringfactory {
 
 1;
 __END__
+
+TODO:
+
+Acceptable formats (Q is sprintf-formats):
+
+    %s          No identifiers
+
+    %Qs         Standard sprintf formats
+
+    %{x}s       "Passme" style
+
+    %Q{x}s      sprintf + passme
+
+    %?x?s       Use format x (standard options) if s is true
+
+    %?x:y?s     Use format x (standard options) if s is true,
+                Use format y (standard options) if s is false.
 
 =head1 NAME
 
@@ -320,3 +339,4 @@ E<lt>https://rt.cpan.org/E<gt>.
 =head1 AUTHOR
 
 darren chamberlain E<lt>darren@cpan.orgE<gt>
+

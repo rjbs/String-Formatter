@@ -1,8 +1,10 @@
 Changes
 Format.pm
 MANIFEST
+MANIFEST.SKIP
 Makefile.PL
 README
+SIGNATURE
 t/01load.t
 t/02basic.t
 t/03multiple.t
