@@ -1,0 +1,6 @@
+.*CVS.*
+^Build$
+^Makefile$
+^_build/
+^pm_to_blib$
+^blib/
