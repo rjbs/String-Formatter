@@ -8,9 +8,9 @@
 # There are many variations on this theme; a few are covered here.
 # ======================================================================
 
-BEGIN { print "1..8\n" }
-
 use strict;
+
+use Test::More tests => 8;
 use String::Format;
 
 # ======================================================================
@@ -33,10 +33,7 @@ $orig   = qq(I like %a, %b, and %g, but not %m or %w.);
 $target = "I like apples, bannanas, and grapefruits, ".
           "but not melons or watermelons.";
 $result = stringf $orig, \%fruit;
-unless ($target eq $target) {
-    print "not ";
-}
-print "ok 1\n";
+is $target  => $result;
 
 # ======================================================================
 # Test 2
@@ -46,10 +43,7 @@ delete $fruit{'b'};
 $target = "I like apples, %b, and grapefruits, ".
           "but not melons or watermelons.";
 $result = stringf $orig, \%fruit;
-unless ($result eq $target) {
-    print "not ";
-}
-print "ok 2\n";
+is $target => $result;
 
 # ======================================================================
 # Test 3
@@ -58,10 +52,7 @@ print "ok 2\n";
 $orig   = '%A is not %a';
 $target = 'two is not one';
 $result = stringf $orig, { "a" => "one", "A" => "two" };
-unless ($result eq $target) {
-    print "not ";
-}
-print "ok 3\n";
+is $target => $result;
 
 # ======================================================================
 # Test 4
@@ -70,10 +61,7 @@ print "ok 3\n";
 $orig   = "I am being %.5r.";
 $target = "I am being trunc.";
 $result = stringf $orig, { "r" => "truncated" };
-unless ($result eq $target) {
-    print "not ";
-}
-print "ok 4\n";
+is $result => $target;
 
 # ======================================================================
 # Test 5
@@ -82,10 +70,7 @@ print "ok 4\n";
 $orig   = "I am being %30e.";
 $target = "I am being                      elongated.";
 $result = stringf $orig, { "e" => "elongated" };
-unless ($result eq $target) {
-    print "not ";
-}
-print "ok 5\n";
+is $target => $result;
 
 # ======================================================================
 # Test 6 - 8
@@ -96,10 +81,7 @@ print "ok 5\n";
 $orig   = "holy shit %/.";
 $target = "holy shit w00t.";
 $result = stringf $orig, { '/' => "w00t" };
-unless ($result eq $target) {
-    print "not ";
-}
-print "ok 6\n";
+is $target => $result;
 
 # ======================================================================
 # Test 7 => numbers
@@ -107,10 +89,7 @@ print "ok 6\n";
 $orig   = '%1 %2 %3';
 $target = "1 2 3";
 $result = stringf $orig, { '1' => 1, '2' => 2, '3' => 3 };
-unless ($result eq $target) {
-    print "not ";
-}
-print "ok 7\n";
+is $target => $result;
 
 # ======================================================================
 # Test 8 => perl sigils ($@&)
@@ -121,9 +100,6 @@ print "ok 7\n";
 $orig   = '%$ %@ %&';
 $target = "1 2 3";
 $result = stringf $orig, { '$' => 1, '@' => 2, '&' => 3 };
-unless ($result eq $target) {
-    print "not ";
-}
-print "ok 8\n";
+is $target => $result;
 
 

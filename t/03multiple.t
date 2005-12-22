@@ -10,10 +10,11 @@
 # ======================================================================
 
 use strict;
+
+use Test::More tests => 3;
 use String::Format;
 
 my ($orig, $target, $result);
-BEGIN { print "1..3\n" };
 
 # ======================================================================
 # Test 1
@@ -21,20 +22,14 @@ BEGIN { print "1..3\n" };
 $orig   = q(My %foot hurts.);
 $target = q(My %foot hurts.);
 $result = stringf $orig, { 'foot' => 'pretzel' };
-unless ($result eq $target) {
-    print "not ";
-}
-print "ok 1\n";
+is $target => $result;
 
 # ======================================================================
 # Test 2, same as Test 1, but with a one-char format string.
 # ======================================================================
 $target = "My pretzeloot hurts.";
 $result = stringf $orig, { 'f' => 'pretzel' };
-unless ($result eq $target) {
-    print "not ";
-}
-print "ok 2\n";
+is $target => $result;
 
 # ======================================================================
 # Test 3
@@ -42,7 +37,4 @@ print "ok 2\n";
 $orig   = 'I am %undefined';
 $target = 'I am not ndefined';
 $result = stringf $orig, { u => "not " };
-unless ($result eq $target) {
-    print "not ";
-}
-print "ok 3\n";
+is $target => $result;

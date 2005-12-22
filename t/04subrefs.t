@@ -10,12 +10,13 @@
 # ======================================================================
 
 use strict;
+
+use Test::More tests => 3;
 use String::Format;
 use POSIX qw(strftime); # for test 1
 use Socket; # for test 3
 
 my ($orig, $target, $result);
-BEGIN { print "1..3\n" };
 
 # ======================================================================
 # Test 1
@@ -24,23 +25,21 @@ BEGIN { print "1..3\n" };
 $orig   = q(It is now %{%Y/%m%d}d.);
 $target = sprintf q(It is now %s.), strftime("%Y/%m/%d", localtime);
 $result = stringf $orig, "d" => sub { strftime("%Y/%m/%d", localtime) };
-
-unless ($result eq $target) {
-    print "not ";
-}
-print "ok 1\n";
+is $target => $result;
 
 # ======================================================================
 # Test 2
 # using getpwuid
 # ======================================================================
-$orig   = "I am %u.";
-$target = "I am " . getpwuid($<) . ".";
-$result = stringf $orig, "u" => sub { getpwuid($<) };
-unless ($result eq $target) {
-    print "not ";
+SKIP: {
+    skip "Test skipped on this platform", 1 
+        if $^O =~ /win/i;
+
+    $orig   = "I am %u.";
+    $target = "I am " . getpwuid($<) . ".";
+    $result = stringf $orig, "u" => sub { getpwuid($<) };
+    is $target => $result;
 }
-print "ok 2\n";
 
 # ======================================================================
 # Test 3
@@ -50,12 +49,5 @@ sub ip { inet_ntoa inet_aton $_[0] }
 $orig   = q(The address for localhost is %{localhost}i.);
 $target = q(The address for localhost is 127.0.0.1.);
 $result = stringf $orig, "i" => \&ip;
-unless ($result eq $target) {
-    print "not ";
-}
-print "ok 3\n";
+is $target => $result;
 
-# ======================================================================
-# Test 4
-# ======================================================================
-# more tests!

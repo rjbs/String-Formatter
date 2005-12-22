@@ -9,11 +9,11 @@
 # ======================================================================
 
 use strict;
+use Test::More tests => 1;
 use String::Format;
 use POSIX qw(strftime);
 
 my ($orig, $target, $result);
-BEGIN { print "1..1\n" };
 
 # ======================================================================
 # Test 1
@@ -31,10 +31,7 @@ $orig   = 'my lovely TestPkg instance has an id of %i.';
 $target = 'my lovely TestPkg instance has an id of ' . $tpkg->id . '.';
 $result = $formatter->($orig);
 
-unless ($result eq $target) {
-    print "not ";
-}
-print "ok 1\n";
+is $target => $result;
 
 BEGIN {
     # (silly) embedded package

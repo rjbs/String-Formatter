@@ -5,12 +5,7 @@
 # This is your basic "Do I compile?" test.
 # ======================================================================
 
-my $loaded;
-BEGIN { print "1..1\n" };
-END   { 
-    print "not " unless $loaded;
-    print "ok 1\n";
-}
+use strict;
+use Test::More tests => 1;
 
-use String::Format;
-$loaded++;
+use_ok('String::Format');
