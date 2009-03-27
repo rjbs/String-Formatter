@@ -6,10 +6,10 @@ my %clean = (
 );
 
 WriteMakefile(
-    'NAME'      => 'String::Format',
-    'VERSION'   => '1.14',
-    'clean'     => \%clean,
-    'PREREQ_PM' => {
+    'NAME'          => 'String::Format',
+    'VERSION_FROM'  => 'Format.pm',
+    'clean'         => \%clean,
+    'PREREQ_PM'     => {
         'Test::More' => 0.00,
     },
 );

@@ -11,10 +11,9 @@
 
 use strict;
 
-use Test::More tests => 3;
+use Test::More tests => 2;
 use String::Format;
 use POSIX qw(strftime); # for test 1
-use Socket; # for test 3
 
 my ($orig, $target, $result);
 
@@ -40,14 +39,4 @@ SKIP: {
     $result = stringf $orig, "u" => sub { getpwuid($<) };
     is $target => $result;
 }
-
-# ======================================================================
-# Test 3
-# hostname lookups
-# ======================================================================
-sub ip { inet_ntoa inet_aton $_[0] }
-$orig   = q(The address for localhost is %{localhost}i.);
-$target = q(The address for localhost is 127.0.0.1.);
-$result = stringf $orig, "i" => \&ip;
-is $target => $result;
 

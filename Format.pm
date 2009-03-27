@@ -1,7 +1,7 @@
 package String::Format;
 
 # ----------------------------------------------------------------------
-#  Copyright (C) 2002 darren chamberlain <darren@cpan.org>
+#  Copyright (C) 2002,2009 darren chamberlain <darren@cpan.org>
 #
 #  This program is free software; you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License as
@@ -23,7 +23,7 @@ use vars qw($VERSION @EXPORT);
 use Exporter;
 use base qw(Exporter);
 
-$VERSION = '1.14';
+$VERSION = '1.15';
 @EXPORT = qw(stringf);
 
 sub _replace {
