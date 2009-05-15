@@ -17,14 +17,15 @@ package String::Format;
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 #  USA
 # -------------------------------------------------------------------
-
+require 5.006;
 use strict;
-use vars qw($VERSION @EXPORT);
-use Exporter;
-use base qw(Exporter);
+use warnings;
+use Sub::Exporter -setup => {
+  exports => [ qw(stringf) ],
+  groups  => [ default => [ qw(stringf) ] ],
+};
 
-$VERSION = '1.16';
-@EXPORT = qw(stringf);
+our $VERSION = '1.16';
 
 sub _replace {
     my ($args, $orig, $alignment, $min_width,
