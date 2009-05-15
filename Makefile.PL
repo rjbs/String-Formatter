@@ -11,6 +11,7 @@ WriteMakefile(
     'clean'         => \%clean,
     'PREREQ_PM'     => {
         'Test::More'    => 0.00,
+        'Params::Util'  => '0.12',  # HASHLIKE; also required by Sub::Exporter
         'Sub::Exporter' => '0.980', # bug fixes
     },
 );

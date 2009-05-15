@@ -20,6 +20,8 @@ package String::Format;
 require 5.006;
 use strict;
 use warnings;
+
+use Params::Util (); # we actually get this for free with Sub::Exporter
 use Sub::Exporter -setup => {
   exports => [ qw(stringf) ],
   groups  => [ default => [ qw(stringf) ] ],
@@ -79,7 +81,7 @@ my $regex = qr/
              )/x;
 sub stringf {
     my $format = shift || return;
-    my $args = UNIVERSAL::isa($_[0], 'HASH') ? shift : { @_ };
+    my $args = Params::Util::_HASHLIKE($_[0]) ? shift : { @_ };
 
     _build_stringf(
         __PACKAGE__,
@@ -92,7 +94,7 @@ sub stringf {
 
 sub stringfactory {
     my $class = shift;
-    my $args = UNIVERSAL::isa($_[0], "HASH") ? shift : { @_ };
+    my $args = Params::Util::_HASHLIKE($_[0]) ? shift : { @_ };
     return $class->_build_stringf(stringf => { formats => $args });
 }
 
