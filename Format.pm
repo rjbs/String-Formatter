@@ -80,19 +80,40 @@ my $regex = qr/
 sub stringf {
     my $format = shift || return;
     my $args = UNIVERSAL::isa($_[0], 'HASH') ? shift : { @_ };
-       $args->{'n'} = "\n" unless exists $args->{'n'};
-       $args->{'t'} = "\t" unless exists $args->{'t'};
-       $args->{'%'} = "%"  unless exists $args->{'%'};
 
-    $format =~ s/$regex/_replace($args, $1, $2, $3, $4, $5, $6)/ge;
-
-    return $format;
+    _build_stringf(
+        __PACKAGE__,
+        'stringf',
+        {
+          formats => $args,
+        },
+    )->($format);
 }
 
 sub stringfactory {
-    shift;  # It's a class method, but we don't actually want the class
+    my $class = shift;
     my $args = UNIVERSAL::isa($_[0], "HASH") ? shift : { @_ };
-    return sub { stringf($_[0], $args) };
+    return $class->_build_stringf(stringf => { formats => $args });
+}
+
+sub _build_stringf {
+    my ($self, $name, $arg) = @_;
+    return $self->can('stringf') unless %$arg;
+    Carp::confess('no formats given') unless my $format = $arg->{formats};
+
+   $format->{'n'} = "\n" unless exists $format->{'n'};
+   $format->{'t'} = "\t" unless exists $format->{'t'};
+   $format->{'%'} = "%"  unless exists $format->{'%'};
+
+    return sub {
+        # This is the previous behavior, but I think we should die instead,
+        # like sprintf. -- rjbs, 2009-05-15
+        return unless defined $_[0];
+
+        my $string = shift;
+        $string =~ s/$regex/_replace($format, $1, $2, $3, $4, $5, $6)/ge;
+        return $string
+    }
 }
 
 1;
