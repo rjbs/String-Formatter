@@ -13,5 +13,7 @@ is(stringf($with_n), "End in n.\n", '%s becomes \n');
 
 is(stringf($with_n, n => undef), 'End in n.%n', '(n=>undef) and %n untouched');
 
+is(stringf($with_n, n => '%n'), 'End in n.%n', '(n=>%n) and %n still %n');
+
 my $with_nl = "Newline!\n";
 is(stringf($with_nl), "Newline!\n", '\n in string is unmolested');
