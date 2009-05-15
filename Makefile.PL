@@ -10,6 +10,7 @@ WriteMakefile(
     'VERSION_FROM'  => 'Format.pm',
     'clean'         => \%clean,
     'PREREQ_PM'     => {
-        'Test::More' => 0.00,
+        'Test::More'    => 0.00,
+        'Sub::Exporter' => '0.980', # bug fixes
     },
 );
