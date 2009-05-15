@@ -32,7 +32,7 @@ is $target => $result;
 # ======================================================================
 SKIP: {
     skip "Test skipped on this platform", 1 
-        if $^O =~ /win/i;
+        if $^O eq 'MSWin32'
 
     $orig   = "I am %u.";
     $target = "I am " . getpwuid($<) . ".";
