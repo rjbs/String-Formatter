@@ -78,9 +78,9 @@ my $regex = qr/
 sub stringf {
     my $format = shift || return;
     my $args = UNIVERSAL::isa($_[0], 'HASH') ? shift : { @_ };
-       $args->{'n'} = "\n" unless defined $args->{'n'};
-       $args->{'t'} = "\t" unless defined $args->{'t'};
-       $args->{'%'} = "%"  unless defined $args->{'%'};
+       $args->{'n'} = "\n" unless exists $args->{'n'};
+       $args->{'t'} = "\t" unless exists $args->{'t'};
+       $args->{'%'} = "%"  unless exists $args->{'%'};
 
     $format =~ s/$regex/_replace($args, $1, $2, $3, $4, $5, $6)/ge;
 
