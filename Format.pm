@@ -108,11 +108,7 @@ arbitrary format definitions
 
 =head1 SYNOPSIS
 
-  # In a script invoked as:
-  # script.pl -f "I like %a, %b, and %g, but not %m or %w."
-
   use String::Format;
-  use Getopt::Std;
 
   my %fruit = (
         'a' => "apples",
@@ -122,10 +118,9 @@ arbitrary format definitions
         'w' => "watermelons",
   );
 
-  use vars qw($opt_f);
-  getopt("f");
+  my $format = "I like %a, %b, and %g, but not %m or %w.";
 
-  print stringf($opt_f, %fruit);
+  print stringf($format, %fruit);
   
   # prints:
   # I like apples, bannanas, and grapefruits, but not melons or watermelons.
