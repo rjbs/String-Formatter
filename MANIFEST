@@ -11,3 +11,6 @@ t/03multiple.t
 t/04subrefs.t
 t/05stringfactory.t
 t/06slash-n.t
+t/braces.t
+t/slash-n.t
+t/with-args.t
