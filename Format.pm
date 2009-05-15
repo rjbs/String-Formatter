@@ -39,7 +39,8 @@ sub _replace {
     if (ref $replacement eq 'CODE') {
         # $passme gets passed to subrefs.
         $passme ||= "";
-        $passme =~ tr/{}//d;
+        $passme =~ s/\A{//g;
+        $passme =~ s/}\z//g;
         $replacement = $replacement->($passme);
     }
 
