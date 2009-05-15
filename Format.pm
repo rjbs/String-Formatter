@@ -23,28 +23,31 @@ use warnings;
 
 use Params::Util (); # we actually get this for free with Sub::Exporter
 use Sub::Exporter -setup => {
-  exports => [ qw(stringf) ],
+  exports => [ stringf => \'_build_stringf' ],
   groups  => [ default => [ qw(stringf) ] ],
 };
 
 our $VERSION = '1.16';
 
 sub _replace {
-    my ($args, $orig, $alignment, $min_width,
-        $max_width, $passme, $formchar) = @_;
+    my ($letter, $orig, $alignment, $min_width,
+        $max_width, $passme, $formchar, $args, $i_ref) = @_;
 
     # For unknown escapes, return the orignial
-    return $orig unless defined $args->{$formchar};
+    unless (defined $letter->{$formchar}) {
+      $$i_ref--;
+      return $orig;
+    }
 
     $alignment = '+' unless defined $alignment;
 
-    my $replacement = $args->{$formchar};
+    my $replacement = $letter->{$formchar};
     if (ref $replacement eq 'CODE') {
         # $passme gets passed to subrefs.
         $passme ||= "";
         $passme =~ s/\A{//g;
         $passme =~ s/}\z//g;
-        $replacement = $replacement->($passme);
+        $replacement = $replacement->($passme, $$i_ref, $args);
     }
 
     my $replength = length $replacement;
@@ -113,7 +116,11 @@ sub _build_stringf {
         return unless defined $_[0];
 
         my $string = shift;
-        $string =~ s/$regex/_replace($format, $1, $2, $3, $4, $5, $6)/ge;
+        my $i = -1;
+        $string =~ s/$regex/
+          $i++;
+          _replace($format, $1, $2, $3, $4, $5, $6, \@_, \$i);
+        /ge;
         return $string
     }
 }
