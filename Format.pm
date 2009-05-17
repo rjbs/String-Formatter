@@ -23,7 +23,7 @@ use vars qw($VERSION @EXPORT);
 use Exporter;
 use base qw(Exporter);
 
-$VERSION = '1.15';
+$VERSION = '1.16';
 @EXPORT = qw(stringf);
 
 sub _replace {
@@ -224,6 +224,13 @@ entry, and called normally, of course:
   *reformat = String::Format->stringfactory(\%formats);
 
   my $reformed = reformat($format_string);
+
+=head1 LICENSE
+
+C<String::Format> is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; version 2.
+
 
 =head1 AUTHOR
 

@@ -1,11 +1,13 @@
 Changes
+COPYING
 Format.pm
+Makefile.PL
 MANIFEST
 MANIFEST.SKIP
-Makefile.PL
 README
 t/01load.t
 t/02basic.t
 t/03multiple.t
 t/04subrefs.t
 t/05stringfactory.t
+t/06slash-n.t
