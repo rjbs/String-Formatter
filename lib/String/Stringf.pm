@@ -149,38 +149,46 @@ __END__
 
 =head2 stringf
 
-String::Stringf exports a single function called stringf.  stringf
+String::Stringf can export a single function called stringf.  stringf
 takes two arguments:  a format string (see FORMAT STRINGS, below) and
 a reference to a hash of name => value pairs.  These name => value
 pairs are what will be expanded in the format string.
 
 =head1 FORMAT STRINGS
 
-Format strings must match the following regular expression:
+Format strings are strings with embedded format markers.  If you've used C or
+Perl's C<sprintf>, you already understand.  If you haven't, you should read
+about how C<sprintf> works.
 
-  qr/
-     (%             # leading '%'
-      (-)?          # left-align, rather than right
-      (\d*)?        # (optional) minimum field width
-      (?:\.(\d*))?  # (optional) maximum field width
-      ({.*?})?      # (optional) stuff inside
-      (\S)          # actual format character
-     )/x;
+Format markers are generally in the form:
 
-If the escape character specified does not exist in %args, then the
-original string is used.  The alignment, minimum width, and maximum
-width options function identically to how they are defined in
-sprintf(3) (any variation is a bug, and should be reported).
+  %    - a percent sign to begin the format
+  ...  - (optional) various modifiers to the format like "-5" or "#" or "2$"
+  {..} - (optional) a string inside braces
+  s    - a short string (usually one character) identifying the conversion
 
-Note that Perl's sprintf definition is a little more liberal than the
-above regex; the deviations were intentional, and all deal with
-numeric formatting (the #, 0, and + leaders were specifically left
-out).
+Not all formatters found in Perl's C<sprintf> are yet supported.  Currently the
+only format modifers must match:
 
-The value attached to the key can be a scalar value or a subroutine
-reference; if it is a subroutine reference, then anything between the
-'{' and '}' ($5 in the above regex) will be passed as $_[0] to the
-subroutine reference.  This allows for entries such as this:
+    (-)?          # left-align, rather than right
+    (\d*)?        # (optional) minimum field width
+    (?:\.(\d*))?  # (optional) maximum field width
+
+If a format string has an unknown conversion, an exception will be raised.
+
+=head1 CONVERSIONS
+
+C<stringf> routines must be provided with a set of conversions.  They're
+provided as a hashref in which the keys are the conversion identifiers and the
+values are either strings or coderefs.
+
+If the values are strings then the string is the value that is used for the
+conversion.  If it is a subroutine reference, the sub will be called once for
+each time it appears in the format string, with the following arguments:
+
+  $code->( ... );
+
+This allows for entries such as this:
 
   %args = (
       d => sub { POSIX::strftime($_[0], localtime) }, 
