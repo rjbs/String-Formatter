@@ -1,4 +1,4 @@
-package String::Format;
+package String::Stringf;
 
 # ----------------------------------------------------------------------
 #  Copyright (C) 2002,2009 darren chamberlain <darren@cpan.org>
