@@ -1,17 +1,48 @@
 use strict;
 use warnings;
-
 package String::Stringf;
+# ABSTRACT: build sprintf-like functions of your own
+
+our $VERSION = '1.16';
+
+=head1 SYNOPSIS
+
+  use String::Stringf;
+
+  my %fruit = (
+    a => "apples",
+    b => "bannanas",
+    g => "grapefruits",
+    m => "melons",
+    w => "watermelons",
+  );
+
+  my $format = "I like %a, %b, and %g, but not %m or %w.";
+
+  print stringf($format, %fruit);
+  
+...prints:
+
+  I like apples, bannanas, and grapefruits, but not melons or watermelons.
+
+=head1 DESCRIPTION
+
+String::Stringf lets you define arbitrary printf-like format sequences to be
+expanded.  This module would be most useful in configuration files and
+reporting tools, where the results of a query need to be formatted in a
+particular way.  String::Stringf is derived from String::Format, which was
+inspired by mutt's index_format and related directives (see
+<URL:http://www.mutt.org/doc/manual/manual-6.html#index_format>).
+
+=cut
 
 require 5.006;
 
-use Params::Util ();  # we actually get this for free with Sub::Exporter
+use Params::Util ();
 use Sub::Exporter -setup => {
   exports => [ stringf => \'_build_stringf' ],
   groups  => [ default => [qw(stringf)] ],
 };
-
-our $VERSION = '1.16';
 
 sub _replace {
   my (
@@ -63,13 +94,14 @@ sub _replace {
 }
 
 my $regex = qr/
-               (%             # leading '%'
-                (-)?          # left-align, rather than right
-                (\d*)?        # (optional) minimum field width
-                (?:\.(\d*))?  # (optional) maximum field width
-                ({.*?})?      # (optional) stuff inside
-                (\S)          # actual format character
-             )/x;
+ (%             # leading '%'
+  (-)?          # left-align, rather than right
+  (\d*)?        # (optional) minimum field width
+  (?:\.(\d*))?  # (optional) maximum field width
+  ({.*?})?      # (optional) stuff inside
+  (\S)          # actual format character
+ )
+/x;
 
 sub stringf {
   my $format = shift || return;
@@ -94,60 +126,24 @@ sub _build_stringf {
   $format->{'%'} = "%"  unless exists $format->{'%'};
 
   return sub {
-
     # This is the previous behavior, but I think we should die instead,
     # like sprintf. -- rjbs, 2009-05-15
-    return unless defined $_[0];
+    Carp::croak("not enough arguments for stringf-based format") unless @_;
 
-    my $string = shift;
-    my $i      = -1;
+    return unless defined (my $string = shift);
+    my $i = -1;
+
     $string =~ s/$regex/
-          $i++;
-          _replace($format, $1, $2, $3, $4, $5, $6, \@_, \$i);
-        /ge;
+      $i++;
+      _replace($format, $1, $2, $3, $4, $5, $6, \@_, \$i);
+    /ge;
+
     return $string;
-    }
+  };
 }
 
 1;
 __END__
-
-=head1 NAME
-
-String::Stringf - sprintf-like string formatting capabilities with
-arbitrary format definitions
-
-=head1 ABSTRACT
-
-String::Stringf allows for sprintf-style formatting capabilities with
-arbitrary format definitions
-
-=head1 SYNOPSIS
-
-  use String::Stringf;
-
-  my %fruit = (
-        'a' => "apples",
-        'b' => "bannanas",
-        'g' => "grapefruits",
-        'm' => "melons",
-        'w' => "watermelons",
-  );
-
-  my $format = "I like %a, %b, and %g, but not %m or %w.";
-
-  print stringf($format, %fruit);
-  
-  # prints:
-  # I like apples, bannanas, and grapefruits, but not melons or watermelons.
-
-=head1 DESCRIPTION
-
-String::Stringf lets you define arbitrary printf-like format sequences
-to be expanded.  This module would be most useful in configuration
-files and reporting tools, where the results of a query need to be
-formatted in a particular way.  It was inspired by mutt's index_format
-and related directives (see <URL:http://www.mutt.org/doc/manual/manual-6.html#index_format>).
 
 =head1 FUNCTIONS
 
