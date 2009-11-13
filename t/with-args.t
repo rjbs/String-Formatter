@@ -7,11 +7,11 @@ use String::Stringf stringf => {
   formats => { s => sub { "$_[0] - $_[1] - @{$_[2]}" } },
 };
 
-my $str = stringf('%{foo}s | %x | %{bar}s | %{baz}s', 1, 2, 3);
+my $str = stringf('%{foo}s | %{bar}s | %{baz}s', 1, 2, 3);
 
 is(
   $str,
-  "foo - 0 - 1 2 3 | %x | bar - 1 - 1 2 3 | baz - 2 - 1 2 3",
+  "foo - 0 - 1 2 3 | bar - 1 - 1 2 3 | baz - 2 - 1 2 3",
   "we get all the suspected parameters to format subs",
 );
 

@@ -1,21 +1,14 @@
-#!/usr/bin/env perl
-# vim: set ft=perl:
-
-# ======================================================================
-# 02basic.t
-#
-# Simple test, testing multiple format chars in a single string.
-# There are many variations on this theme; a few are covered here.
-# ======================================================================
-
+#!perl
 use strict;
 
 use Test::More tests => 8;
+use Test::Exception;
+
 use String::Stringf;
 
-# ======================================================================
-# Lexicals.  $orig is the original format string.
-# ======================================================================
+# Simple test, testing multiple format chars in a single string.
+# There are many variations on this theme; a few are covered here.
+
 my ($orig, $target, $result);
 my %fruit = (
     'a' => "apples",
@@ -33,7 +26,7 @@ $orig   = qq(I like %a, %b, and %g, but not %m or %w.);
 $target = "I like apples, bannanas, and grapefruits, ".
           "but not melons or watermelons.";
 $result = stringf $orig, \%fruit;
-is $target  => $result;
+is $result => $target;
 
 # ======================================================================
 # Test 2
@@ -42,8 +35,7 @@ is $target  => $result;
 delete $fruit{'b'};
 $target = "I like apples, %b, and grapefruits, ".
           "but not melons or watermelons.";
-$result = stringf $orig, \%fruit;
-is $target => $result;
+throws_ok { stringf $orig, \%fruit; } qr/Unknown conversion/i;
 
 # ======================================================================
 # Test 3
@@ -52,7 +44,7 @@ is $target => $result;
 $orig   = '%A is not %a';
 $target = 'two is not one';
 $result = stringf $orig, { "a" => "one", "A" => "two" };
-is $target => $result;
+is $result => $target;
 
 # ======================================================================
 # Test 4
@@ -70,7 +62,7 @@ is $result => $target;
 $orig   = "I am being %30e.";
 $target = "I am being                      elongated.";
 $result = stringf $orig, { "e" => "elongated" };
-is $target => $result;
+is $result => $target;
 
 # ======================================================================
 # Test 6 - 8
@@ -78,10 +70,10 @@ is $target => $result;
 # ======================================================================
 # Test 6 => '/'
 # ======================================================================
-$orig   = "holy shit %/.";
-$target = "holy shit w00t.";
+$orig   = "holy cow %/.";
+$target = "holy cow w00t.";
 $result = stringf $orig, { '/' => "w00t" };
-is $target => $result;
+is $result => $target;
 
 # ======================================================================
 # Test 7 => numbers
@@ -89,7 +81,7 @@ is $target => $result;
 $orig   = '%1 %2 %3';
 $target = "1 2 3";
 $result = stringf $orig, { '1' => 1, '2' => 2, '3' => 3 };
-is $target => $result;
+is $result => $target;
 
 # ======================================================================
 # Test 8 => perl sigils ($@&)
@@ -100,6 +92,6 @@ is $target => $result;
 $orig   = '%$ %@ %&';
 $target = "1 2 3";
 $result = stringf $orig, { '$' => 1, '@' => 2, '&' => 3 };
-is $target => $result;
+is $result => $target;
 
 

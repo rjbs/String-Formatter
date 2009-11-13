@@ -52,8 +52,7 @@ sub _replace {
 
   # For unknown escapes, return the orignial
   unless (defined $letter->{$formchar}) {
-    $$i_ref--;
-    return $orig;
+    Carp::croak("Unknown conversion in stringf-generated routine: %$formchar")
   }
 
   $alignment = '+' unless defined $alignment;
@@ -121,8 +120,6 @@ sub _build_stringf {
   return $self->can('stringf') unless %$arg;
   Carp::confess('no formats given') unless my $format = $arg->{formats};
 
-  $format->{'n'} = "\n" unless exists $format->{'n'};
-  $format->{'t'} = "\t" unless exists $format->{'t'};
   $format->{'%'} = "%"  unless exists $format->{'%'};
 
   return sub {
@@ -219,39 +216,12 @@ Because of how the string is parsed, the normal "\n" and "\t" are
 turned into two characters each, and are not treated as a newline and
 tab.  This is a bug.
 
-=head1 FACTORY METHOD
+=begin :postlude
 
-String::Stringf also supports a class method, named B<stringfactory>,
-which will return reference to a "primed" subroutine.  stringfatory
-should be passed a reference to a hash of value; the returned
-subroutine will use these values as the %args hash.
+=head1 DERIVATION
 
-  my $self = Some::Groovy::Package->new($$, $<, $^T);
-  my %formats = (
-        'i' => sub { $self->id      },
-        'd' => sub { $self->date    },
-        's' => sub { $self->subject },
-        'b' => sub { $self->body    },
-  );
-  my $index_format = String::Stringf->stringfactory(\%formats);
+String::Stringf is based on String::Format, written by Darren Chamberlain.  For
+a history of the code, check the project's source code repository.  All bugs
+should be reported to Ricardo Signes and String::Stringf.
 
-  print $index_format->($format1);
-  print $index_format->($format2);
-
-This subroutine reference can be assigned to a local symbol table
-entry, and called normally, of course:
-
-  *reformat = String::Stringf->stringfactory(\%formats);
-
-  my $reformed = reformat($format_string);
-
-=head1 LICENSE
-
-C<String::Stringf> is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; version 2.
-
-
-=head1 AUTHOR
-
-darren chamberlain <darren@cpan.org>
+=end :postlude
