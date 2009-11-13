@@ -94,4 +94,3 @@ $target = "1 2 3";
 $result = stringf $orig, { '$' => 1, '@' => 2, '&' => 3 };
 is $result => $target;
 
-
