@@ -4,7 +4,7 @@
 # ======================================================================
 # 04subrefs.t
 #
-# The design of String::Format is such that you can pass a subroutine
+# The design of String::Stringf is such that you can pass a subroutine
 # reference as a hash value, and it will be called in place.  Let's
 # test that.
 # ======================================================================
@@ -12,7 +12,7 @@
 use strict;
 
 use Test::More tests => 2;
-use String::Format;
+use String::Stringf;
 use POSIX qw(strftime); # for test 1
 
 my ($orig, $target, $result);

@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Test::More tests => 5;
 
-use String::Format;
+use String::Stringf;
 
 my $unknown_fmt = "This is awesome.%x";
 is(stringf($unknown_fmt), $unknown_fmt, "unknown %-entities are left intact");

@@ -10,7 +10,7 @@
 
 use strict;
 use Test::More tests => 1;
-use String::Format;
+use String::Stringf;
 use POSIX qw(strftime);
 
 my ($orig, $target, $result);
@@ -25,7 +25,7 @@ my %formats = (
     'd' => sub { strftime($_[0], localtime($tpkg->date)) },
     'f' => sub { $tpkg->diff($_[0]) }
 );
-my $formatter = String::Format->stringfactory(\%formats);
+my $formatter = String::Stringf->stringfactory(\%formats);
 
 $orig   = 'my lovely TestPkg instance has an id of %i.';
 $target = 'my lovely TestPkg instance has an id of ' . $tpkg->id . '.';

@@ -12,7 +12,7 @@
 use strict;
 
 use Test::More tests => 3;
-use String::Format;
+use String::Stringf;
 
 my ($orig, $target, $result);
 

@@ -11,7 +11,7 @@
 use strict;
 
 use Test::More tests => 8;
-use String::Format;
+use String::Stringf;
 
 # ======================================================================
 # Lexicals.  $orig is the original format string.

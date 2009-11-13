@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Test::More tests => 3;
 
-use String::Format stringf => {
+use String::Stringf stringf => {
   formats => { s => sub { "$_[0] - $_[1] - @{$_[2]}" } },
 };
 
@@ -16,7 +16,7 @@ is(
 );
 
 {
-  my $formatter = String::Format->stringfactory({
+  my $formatter = String::Stringf->stringfactory({
     p => sub { $_[2]->[ $_[1] ] },
   });
 
@@ -25,7 +25,7 @@ is(
 }
 
 {
-  my $formatter = String::Format->stringfactory({
+  my $formatter = String::Stringf->stringfactory({
     n => sub { $_[2]->[0]{ $_[0] } },
   });
 

@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Test::More tests => 1;
 
-use String::Format;
+use String::Stringf;
 
 my $unknown_fmt = "We know that %{nested {braces} rule}s.";
 is(

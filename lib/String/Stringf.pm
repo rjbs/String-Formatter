@@ -1,77 +1,65 @@
-package String::Stringf;
-
-# ----------------------------------------------------------------------
-#  Copyright (C) 2002,2009 darren chamberlain <darren@cpan.org>
-#
-#  This program is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU General Public License as
-#  published by the Free Software Foundation; version 2.
-#
-#  This program is distributed in the hope that it will be useful, but
-#  WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#  General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-#  USA
-# -------------------------------------------------------------------
-require 5.006;
 use strict;
 use warnings;
 
-use Params::Util (); # we actually get this for free with Sub::Exporter
+package String::Stringf;
+
+require 5.006;
+
+use Params::Util ();  # we actually get this for free with Sub::Exporter
 use Sub::Exporter -setup => {
   exports => [ stringf => \'_build_stringf' ],
-  groups  => [ default => [ qw(stringf) ] ],
+  groups  => [ default => [qw(stringf)] ],
 };
 
 our $VERSION = '1.16';
 
 sub _replace {
-    my ($letter, $orig, $alignment, $min_width,
-        $max_width, $passme, $formchar, $args, $i_ref) = @_;
+  my (
+    $letter, $orig,     $alignment, $min_width, $max_width,
+    $passme, $formchar, $args,      $i_ref
+  ) = @_;
 
-    # For unknown escapes, return the orignial
-    unless (defined $letter->{$formchar}) {
-      $$i_ref--;
-      return $orig;
-    }
+  # For unknown escapes, return the orignial
+  unless (defined $letter->{$formchar}) {
+    $$i_ref--;
+    return $orig;
+  }
 
-    $alignment = '+' unless defined $alignment;
+  $alignment = '+' unless defined $alignment;
 
-    my $replacement = $letter->{$formchar};
-    if (ref $replacement eq 'CODE') {
-        # $passme gets passed to subrefs.
-        $passme ||= "";
-        $passme =~ s/\A{//g;
-        $passme =~ s/}\z//g;
-        $replacement = $replacement->($passme, $$i_ref, $args);
-    }
+  my $replacement = $letter->{$formchar};
+  if (ref $replacement eq 'CODE') {
 
-    my $replength = length $replacement;
-    $min_width  ||= $replength;
-    $max_width  ||= $replength;
+    # $passme gets passed to subrefs.
+    $passme ||= "";
+    $passme =~ s/\A{//g;
+    $passme =~ s/}\z//g;
+    $replacement = $replacement->($passme, $$i_ref, $args);
+  }
 
-    # length of replacement is between min and max
-    if (($replength > $min_width) && ($replength < $max_width)) {
-        return $replacement;
-    }
+  my $replength = length $replacement;
+  $min_width ||= $replength;
+  $max_width ||= $replength;
 
-    # length of replacement is longer than max; truncate
-    if ($replength > $max_width) {
-        return substr($replacement, 0, $max_width);
-    }
-    
-    # length of replacement is less than min: pad
-    if ($alignment eq '-') {
-        # left align; pad in front
-        return $replacement . " " x ($min_width - $replength);
-    }
+  # length of replacement is between min and max
+  if (($replength > $min_width) && ($replength < $max_width)) {
+    return $replacement;
+  }
 
-    # right align, pad at end
-    return " " x ($min_width - $replength) . $replacement;
+  # length of replacement is longer than max; truncate
+  if ($replength > $max_width) {
+    return substr($replacement, 0, $max_width);
+  }
+
+  # length of replacement is less than min: pad
+  if ($alignment eq '-') {
+
+    # left align; pad in front
+    return $replacement . " " x ($min_width - $replength);
+  }
+
+  # right align, pad at end
+  return " " x ($min_width - $replength) . $replacement;
 }
 
 my $regex = qr/
@@ -82,46 +70,42 @@ my $regex = qr/
                 ({.*?})?      # (optional) stuff inside
                 (\S)          # actual format character
              )/x;
-sub stringf {
-    my $format = shift || return;
-    my $args = Params::Util::_HASHLIKE($_[0]) ? shift : { @_ };
 
-    _build_stringf(
-        __PACKAGE__,
-        'stringf',
-        {
-          formats => $args,
-        },
-    )->($format);
+sub stringf {
+  my $format = shift || return;
+  my $args = Params::Util::_HASHLIKE($_[0]) ? shift : {@_};
+
+  _build_stringf(__PACKAGE__, 'stringf', { formats => $args, },)->($format);
 }
 
 sub stringfactory {
-    my $class = shift;
-    my $args = Params::Util::_HASHLIKE($_[0]) ? shift : { @_ };
-    return $class->_build_stringf(stringf => { formats => $args });
+  my $class = shift;
+  my $args = Params::Util::_HASHLIKE($_[0]) ? shift : {@_};
+  return $class->_build_stringf(stringf => { formats => $args });
 }
 
 sub _build_stringf {
-    my ($self, $name, $arg) = @_;
-    return $self->can('stringf') unless %$arg;
-    Carp::confess('no formats given') unless my $format = $arg->{formats};
+  my ($self, $name, $arg) = @_;
+  return $self->can('stringf') unless %$arg;
+  Carp::confess('no formats given') unless my $format = $arg->{formats};
 
-   $format->{'n'} = "\n" unless exists $format->{'n'};
-   $format->{'t'} = "\t" unless exists $format->{'t'};
-   $format->{'%'} = "%"  unless exists $format->{'%'};
+  $format->{'n'} = "\n" unless exists $format->{'n'};
+  $format->{'t'} = "\t" unless exists $format->{'t'};
+  $format->{'%'} = "%"  unless exists $format->{'%'};
 
-    return sub {
-        # This is the previous behavior, but I think we should die instead,
-        # like sprintf. -- rjbs, 2009-05-15
-        return unless defined $_[0];
+  return sub {
 
-        my $string = shift;
-        my $i = -1;
-        $string =~ s/$regex/
+    # This is the previous behavior, but I think we should die instead,
+    # like sprintf. -- rjbs, 2009-05-15
+    return unless defined $_[0];
+
+    my $string = shift;
+    my $i      = -1;
+    $string =~ s/$regex/
           $i++;
           _replace($format, $1, $2, $3, $4, $5, $6, \@_, \$i);
         /ge;
-        return $string
+    return $string;
     }
 }
 
@@ -130,17 +114,17 @@ __END__
 
 =head1 NAME
 
-String::Format - sprintf-like string formatting capabilities with
+String::Stringf - sprintf-like string formatting capabilities with
 arbitrary format definitions
 
 =head1 ABSTRACT
 
-String::Format allows for sprintf-style formatting capabilities with
+String::Stringf allows for sprintf-style formatting capabilities with
 arbitrary format definitions
 
 =head1 SYNOPSIS
 
-  use String::Format;
+  use String::Stringf;
 
   my %fruit = (
         'a' => "apples",
@@ -159,7 +143,7 @@ arbitrary format definitions
 
 =head1 DESCRIPTION
 
-String::Format lets you define arbitrary printf-like format sequences
+String::Stringf lets you define arbitrary printf-like format sequences
 to be expanded.  This module would be most useful in configuration
 files and reporting tools, where the results of a query need to be
 formatted in a particular way.  It was inspired by mutt's index_format
@@ -169,7 +153,7 @@ and related directives (see <URL:http://www.mutt.org/doc/manual/manual-6.html#in
 
 =head2 stringf
 
-String::Format exports a single function called stringf.  stringf
+String::Stringf exports a single function called stringf.  stringf
 takes two arguments:  a format string (see FORMAT STRINGS, below) and
 a reference to a hash of name => value pairs.  These name => value
 pairs are what will be expanded in the format string.
@@ -233,7 +217,7 @@ tab.  This is a bug.
 
 =head1 FACTORY METHOD
 
-String::Format also supports a class method, named B<stringfactory>,
+String::Stringf also supports a class method, named B<stringfactory>,
 which will return reference to a "primed" subroutine.  stringfatory
 should be passed a reference to a hash of value; the returned
 subroutine will use these values as the %args hash.
@@ -245,7 +229,7 @@ subroutine will use these values as the %args hash.
         's' => sub { $self->subject },
         'b' => sub { $self->body    },
   );
-  my $index_format = String::Format->stringfactory(\%formats);
+  my $index_format = String::Stringf->stringfactory(\%formats);
 
   print $index_format->($format1);
   print $index_format->($format2);
@@ -253,13 +237,13 @@ subroutine will use these values as the %args hash.
 This subroutine reference can be assigned to a local symbol table
 entry, and called normally, of course:
 
-  *reformat = String::Format->stringfactory(\%formats);
+  *reformat = String::Stringf->stringfactory(\%formats);
 
   my $reformed = reformat($format_string);
 
 =head1 LICENSE
 
-C<String::Format> is free software; you can redistribute it and/or
+C<String::Stringf> is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License as
 published by the Free Software Foundation; version 2.
 
