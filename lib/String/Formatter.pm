@@ -1,33 +1,12 @@
-use strict;
-use warnings;
-package String::Stringf;
+package String::Formatter;
+use Moose;
 # ABSTRACT: build sprintf-like functions of your own
 
 our $VERSION = '1.16';
 
-=head1 SYNOPSIS
-
-  use String::Stringf;
-
-  my %fruit = (
-    a => "apples",
-    b => "bannanas",
-    g => "grapefruits",
-    m => "melons",
-    w => "watermelons",
-  );
-
-  my $format = "I like %a, %b, and %g, but not %m or %w.";
-
-  print stringf($format, %fruit);
-  
-...prints:
-
-  I like apples, bannanas, and grapefruits, but not melons or watermelons.
-
 =head1 DESCRIPTION
 
-String::Stringf lets you define arbitrary printf-like format sequences to be
+String::Formatter lets you define arbitrary printf-like format sequences to be
 expanded.  This module would be most useful in configuration files and
 reporting tools, where the results of a query need to be formatted in a
 particular way.  String::Stringf is derived from String::Format, which was
@@ -39,16 +18,23 @@ inspired by mutt's index_format and related directives (see
 require 5.006;
 
 use Params::Util ();
-use Sub::Exporter -setup => {
-  exports => [ stringf => \'_build_stringf' ],
-  groups  => [ default => [qw(stringf)] ],
-};
+# use Sub::Exporter -setup => {
+#   exports => [ stringf => \'_build_stringf' ],
+#   groups  => [ default => [qw(stringf)] ],
+# };
 
 sub _replace {
-  my (
-    $letter, $orig,     $alignment, $min_width, $max_width,
-    $passme, $formchar, $args,      $i_ref
-  ) = @_;
+  my ($self, $arg) = @_;
+
+  my $letter    = $self->codes;
+  my $orig      = $arg->{orig};
+  my $alignment = $arg->{alignment};
+  my $min_width = $arg->{min_width};
+  my $max_width = $arg->{max_width};
+  my $passme    = $arg->{passme};
+  my $formchar  = $arg->{formchar};
+  my $args      = $arg->{args};
+  my $i_ref     = $arg->{i_ref};
 
   # For unknown escapes, return the orignial
   unless (defined $letter->{$formchar}) {
@@ -92,51 +78,57 @@ sub _replace {
   return " " x ($min_width - $replength) . $replacement;
 }
 
+has codes => (
+  is  => 'ro',
+  isa => 'HashRef',
+  required => 1,
+);
+
 my $regex = qr/
- (%             # leading '%'
-  (-)?          # left-align, rather than right
-  (\d*)?        # (optional) minimum field width
-  (?:\.(\d*))?  # (optional) maximum field width
-  ({.*?})?      # (optional) stuff inside
-  (\S)          # actual format character
+ (%                # leading '%'
+  (-)?             # left-align, rather than right
+  ([0-9]*)?        # (optional) minimum field width
+  (?:\.([0-9]*))?  # (optional) maximum field width
+  ({.*?})?         # (optional) stuff inside
+  (\S)             # actual format character
  )
 /x;
 
-sub stringf {
-  my $format = shift || return;
-  my $args = Params::Util::_HASHLIKE($_[0]) ? shift : {@_};
+sub format {
+  my $self   = shift;
+  my $format = shift;
 
-  _build_stringf(__PACKAGE__, 'stringf', { formats => $args, },)->($format);
-}
+  my $codes = $self->codes;
+  local $codes->{'%'} = '%' unless exists $codes->{'%'};
 
-sub stringfactory {
-  my $class = shift;
-  my $args = Params::Util::_HASHLIKE($_[0]) ? shift : {@_};
-  return $class->_build_stringf(stringf => { formats => $args });
-}
+  Carp::croak("not enough arguments for stringf-based format")
+    unless defined $format;
 
-sub _build_stringf {
-  my ($self, $name, $arg) = @_;
-  return $self->can('stringf') unless %$arg;
-  Carp::confess('no formats given') unless my $format = $arg->{formats};
+  my @to_fmt;
 
-  $format->{'%'} = "%"  unless exists $format->{'%'};
+  my $pos = 0;
+  while ($format =~ m{\G(.*?)$regex}g) {
+    push @to_fmt, $1 if defined $1;
 
-  return sub {
-    # This is the previous behavior, but I think we should die instead,
-    # like sprintf. -- rjbs, 2009-05-15
-    Carp::croak("not enough arguments for stringf-based format") unless @_;
+    push @to_fmt, {
+      orig      => $2,
+      alignment => $3,
+      min_width => $4,
+      max_width => $5,
+      passme    => $6,
+      formchar  => $7,
+    };
 
-    return unless defined (my $string = shift);
-    my $i = -1;
+    $pos = pos $format;
+  }
 
-    $string =~ s/$regex/
-      $i++;
-      _replace($format, $1, $2, $3, $4, $5, $6, \@_, \$i);
-    /ge;
+  push @to_fmt, substr $format, $pos if $pos < length $format;
 
-    return $string;
-  };
+  my $string = join q{},
+               map { (ref) ? $self->_replace({ %$_, args => \@_ }) : $_ }
+               @to_fmt;
+
+  return $string;
 }
 
 1;

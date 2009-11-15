@@ -2,13 +2,13 @@
 stringf FORMAT, LIST;
 
   stringf => {
-    conversions   => { ... },     # the conversions!
+    codes         => { ... },     # the conversions!
     prepare_input => sub { ... }, # deals with LIST as a whole
     iterator      => sub { ... }, # loops over markers, calling conversions
     formatter     => sub { ... }, # postproc output for common -3.1# behavior
   }
 
-conversions => {
+codes => {
   x => sub {
     my ($self, $input, $arg, $formatter) = @_;
     # input is also in $_
