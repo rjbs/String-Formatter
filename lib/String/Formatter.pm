@@ -94,12 +94,16 @@ my $regex = qr/
  )
 /x;
 
+sub BUILD {
+  my $codes = $_[0]->codes;
+
+  Carp::confess("you must not supply a % format") if defined $codes->{'%'};
+  $codes->{'%'} = '%';
+}
+
 sub format {
   my $self   = shift;
   my $format = shift;
-
-  my $codes = $self->codes;
-  local $codes->{'%'} = '%' unless exists $codes->{'%'};
 
   Carp::croak("not enough arguments for stringf-based format")
     unless defined $format;

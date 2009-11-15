@@ -21,7 +21,14 @@ my $fmt = String::Formatter->new({
   my $have = $fmt->format(q(please have some %w));
   my $want = 'please have some watermelons';
 
-  is($have, $want, "formatting with no text after last code");;
+  is($have, $want, "formatting with no text after last code");
+}
+
+{
+  my $have = $fmt->format(q(10%% discount on %w));
+  my $want = '10% discount on watermelons';
+
+  is($have, $want, "%% -> %");
 }
 
 {
@@ -29,7 +36,7 @@ my $fmt = String::Formatter->new({
   my $want = 'I like apples, bannanas, and grapefruits, '
            . 'but not melons or watermelons.';
 
-  is($have, $want, "formatting with text after last code");;
+  is($have, $want, "formatting with text after last code");
 }
 
 {
