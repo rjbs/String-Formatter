@@ -26,7 +26,7 @@ use Params::Util ();
 sub _format {
   my ($self, $hunk) = @_;
 
-  my $alignment   = $hunk->{alignment} || '+';
+  my $alignment   = $hunk->{alignment};
   my $min_width   = $hunk->{min_width};
   my $max_width   = $hunk->{max_width};
   my $replacement = $hunk->{replacement};
@@ -46,14 +46,10 @@ sub _format {
   }
 
   # length of replacement is less than min: pad
-  if ($alignment eq '-') {
-
-    # left align; pad in front
-    return $replacement . " " x ($min_width - $replength);
-  }
-
-  # right align, pad at end
-  return " " x ($min_width - $replength) . $replacement;
+  # alignment can only be '-' or undef, so - is true -- rjbs, 2009-11-16
+  return $alignment
+       ? $replacement . " " x ($min_width - $replength)
+       : " " x ($min_width - $replength) . $replacement;
 }
 
 has codes => (
