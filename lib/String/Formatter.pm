@@ -5,14 +5,90 @@ package String::Formatter;
 
 our $VERSION = '1.16';
 
+=head1 SYNOPSIS
+
+  use String::Formatter stringf => {
+    -as   => 'str_rf',
+    codes => {
+      f => sub { $_ },
+      b => sub { scalar reverse $_ },
+    },
+  };
+
+
+  print str_rf('This is %10f and this is %-15b.', 'forward', 'backward');
+
+...prints...
+
+  This is    forward and this is drawkcab       .
+
 =head1 DESCRIPTION
 
-String::Formatter lets you define arbitrary printf-like format sequences to be
-expanded.  This module would be most useful in configuration files and
-reporting tools, where the results of a query need to be formatted in a
-particular way.  String::Stringf is derived from String::Format, which was
-inspired by mutt's index_format and related directives (see
-<URL:http://www.mutt.org/doc/manual/manual-6.html#index_format>).
+String::Formatter is a tool for building sprintf-like formatting routines.
+It supports named or positional formatting, custom conversions, fixed string
+interpolation, and simple width-matching out of the box.  It is easy to alter
+its behavior to write new kinds of format string expanders.  For most cases, it
+should be easy to build all sorts of formatters out of the options built into
+String::Formatter.
+
+Normally, String::Formatter will be used to import a sprintf-like routine
+referred to as "C<stringf>", but which can be given any name you like.  This
+routine acts like sprintf in that it takes a string and some inputs and returns
+a new string:
+
+  my $output = stringf "Some %a format %s for you to %u.\n", { ... };
+
+This routine is actually a wrapper around a String::Formatter object created by
+importing stringf.  In the following code, the entire hashref after "stringf"
+is passed to String::Formatter's constructor (the C<new> method), save for the
+C<-as> key and any other keys that start with a dash.
+
+  use String::Formatter
+    stringf => {
+      -as => 'fmt_time',
+      codes           => { ... },
+      format_hunker   => ...,
+      input_processor => ...,
+    },
+    stringf => {
+      -as => 'fmt_date',
+      codes           => { ... },
+      string_replacer => ...,
+      hunk_formatter  => ...,
+    },
+  ;
+
+As you can see, this will generate two stringf routines, with different
+behaviors, which are installed with different names.  Since the behavior of
+these routines is based on the C<format> method of a String::Formatter object,
+the rest of the documentation will describe the way the object behaves.
+
+=head1 FORMAT STRINGS
+
+Format strings are generally assumed to look like Perl's sprintf's format
+strings:
+
+  There's a bunch of normal strings and then %s format %1.4c with %% signs.
+
+The exact semantics of the format codes are not totally settled yet -- and they
+can be replaced on a per-formatter basis.  Right now, they're mostly a subset
+of Perl's astonishingly large and complex system.  That subset looks like this:
+
+  %    - a percent sign to begin the format
+  ...  - (optional) various modifiers to the format like "-5" or "#" or "2$"
+  {..} - (optional) a string inside braces
+  s    - a short string (usually one character) identifying the conversion
+
+Not all format modifiers found in Perl's C<sprintf> are yet supported.
+Currently the only format modifers must match:
+
+    (-)?          # left-align, rather than right
+    (\d*)?        # (optional) minimum field width
+    (?:\.(\d*))?  # (optional) maximum field width
+
+Some additional format semantics may be added, but probably nothing exotic.
+Even things like C<2$> and C<*> are probably not going to appear in
+String::Formatter's default behavior.
 
 =cut
 
@@ -29,47 +105,6 @@ sub _build_stringf {
   my $formatter = $class->new($arg);
   return sub { $formatter->format(@_) };
 }
-
-sub format_simply {
-  my ($self, $hunk) = @_;
-
-  my $alignment   = $hunk->{alignment};
-  my $min_width   = $hunk->{min_width};
-  my $max_width   = $hunk->{max_width};
-  my $replacement = $hunk->{replacement};
-
-  my $replength = length $replacement;
-  $min_width ||= $replength;
-  $max_width ||= $replength;
-
-  # length of replacement is between min and max
-  if (($replength > $min_width) && ($replength < $max_width)) {
-    return $replacement;
-  }
-
-  # length of replacement is longer than max; truncate
-  if ($replength > $max_width) {
-    return substr($replacement, 0, $max_width);
-  }
-
-  # length of replacement is less than min: pad
-  # alignment can only be '-' or undef, so - is true -- rjbs, 2009-11-16
-  return $alignment
-       ? $replacement . " " x ($min_width - $replength)
-       : " " x ($min_width - $replength) . $replacement;
-}
-
-my $regex = qr/
- (%                # leading '%'
-  (-)?             # left-align, rather than right
-  ([0-9]+)?        # (optional) minimum field width
-  (?:\.([0-9]*))?  # (optional) maximum field width
-  (?:{(.*?)})?     # (optional) stuff inside
-  (\S)             # actual format character
- )
-/x;
-
-sub codes { $_[0]->{codes} }
 
 my %METHODS;
 BEGIN {
@@ -88,6 +123,8 @@ BEGIN {
     *$default = sub { $METHODS{ $method } };
   }
 }
+
+sub codes { $_[0]->{codes} }
 
 sub new {
   my ($class, $arg) = @_;
@@ -109,19 +146,6 @@ sub new {
   $codes->{'%'} = '%';
 
   return $self;
-}
-
-sub return_input {
-  return $_[1];
-}
-
-sub require_named_input {
-  my ($self, $args) = @_;
-
-  Carp::croak("routine must be called with exactly one hashref arg")
-    if @$args != 1 or ! Params::Util::_HASHLIKE($args->[0]);
-
-  return $args->[0];
 }
 
 sub format {
@@ -148,6 +172,16 @@ sub format {
   return $string;
 }
 
+my $regex = qr/
+ (%                # leading '%'
+  (-)?             # left-align, rather than right
+  ([0-9]+)?        # (optional) minimum field width
+  (?:\.([0-9]*))?  # (optional) maximum field width
+  (?:{(.*?)})?     # (optional) stuff inside
+  (\S)             # actual format character
+ )
+/x;
+
 sub hunk_simply {
   my ($self, $string) = @_;
 
@@ -170,6 +204,19 @@ sub hunk_simply {
   push @to_fmt, substr $string, $pos if $pos < length $string;
 
   return \@to_fmt;
+}
+
+sub return_input {
+  return $_[1];
+}
+
+sub require_named_input {
+  my ($self, $args) = @_;
+
+  Carp::croak("routine must be called with exactly one hashref arg")
+    if @$args != 1 or ! Params::Util::_HASHLIKE($args->[0]);
+
+  return $args->[0];
 }
 
 sub __closure_replace {
@@ -222,39 +269,39 @@ sub named_replace {
   );
 }
 
+sub format_simply {
+  my ($self, $hunk) = @_;
+
+  my $alignment   = $hunk->{alignment};
+  my $min_width   = $hunk->{min_width};
+  my $max_width   = $hunk->{max_width};
+  my $replacement = $hunk->{replacement};
+
+  my $replength = length $replacement;
+  $min_width ||= $replength;
+  $max_width ||= $replength;
+
+  # length of replacement is between min and max
+  if (($replength > $min_width) && ($replength < $max_width)) {
+    return $replacement;
+  }
+
+  # length of replacement is longer than max; truncate
+  if ($replength > $max_width) {
+    return substr($replacement, 0, $max_width);
+  }
+
+  # length of replacement is less than min: pad
+  # alignment can only be '-' or undef, so - is true -- rjbs, 2009-11-16
+  return $alignment
+       ? $replacement . " " x ($min_width - $replength)
+       : " " x ($min_width - $replength) . $replacement;
+}
+
+
 1;
 __END__
 
-=head1 FUNCTIONS
-
-=head2 stringf
-
-String::Stringf can export a single function called stringf.  stringf
-takes two arguments:  a format string (see FORMAT STRINGS, below) and
-a reference to a hash of name => value pairs.  These name => value
-pairs are what will be expanded in the format string.
-
-=head1 FORMAT STRINGS
-
-Format strings are strings with embedded format markers.  If you've used C or
-Perl's C<sprintf>, you already understand.  If you haven't, you should read
-about how C<sprintf> works.
-
-Format markers are generally in the form:
-
-  %    - a percent sign to begin the format
-  ...  - (optional) various modifiers to the format like "-5" or "#" or "2$"
-  {..} - (optional) a string inside braces
-  s    - a short string (usually one character) identifying the conversion
-
-Not all formatters found in Perl's C<sprintf> are yet supported.  Currently the
-only format modifers must match:
-
-    (-)?          # left-align, rather than right
-    (\d*)?        # (optional) minimum field width
-    (?:\.(\d*))?  # (optional) maximum field width
-
-If a format string has an unknown conversion, an exception will be raised.
 
 =head1 CONVERSIONS
 
@@ -301,10 +348,11 @@ tab.  This is a bug.
 
 =begin :postlude
 
-=head1 DERIVATION
+=head1 HISTORY
 
-String::Stringf is based on String::Format, written by Darren Chamberlain.  For
-a history of the code, check the project's source code repository.  All bugs
-should be reported to Ricardo Signes and String::Stringf.
+String::Formatter is based on String::Format, written by Darren Chamberlain.
+For a history of the code, check the project's source code repository.  All
+bugs should be reported to Ricardo Signes and String::Formatter.  Very little
+of the original code remains.
 
 =end :postlude
