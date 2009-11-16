@@ -19,10 +19,16 @@ inspired by mutt's index_format and related directives (see
 require 5.006;
 
 use Params::Util ();
-# use Sub::Exporter -setup => {
-#   exports => [ stringf => \'_build_stringf' ],
-#   groups  => [ default => [qw(stringf)] ],
-# };
+use Sub::Exporter -setup => {
+  exports => [ stringf => \'_build_stringf' ],
+};
+
+sub _build_stringf {
+  my ($class, $name, $arg, $col) = @_;
+  
+  my $formatter = $class->new($arg);
+  return sub { $formatter->format(@_) };
+}
 
 sub format_simply {
   my ($self, $hunk) = @_;
