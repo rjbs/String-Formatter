@@ -1,5 +1,6 @@
+use strict;
+use warnings;
 package String::Formatter;
-use Moose;
 # ABSTRACT: build sprintf-like functions of your own
 
 our $VERSION = '1.16';
@@ -23,7 +24,7 @@ use Params::Util ();
 #   groups  => [ default => [qw(stringf)] ],
 # };
 
-sub _format {
+sub format_simply {
   my ($self, $hunk) = @_;
 
   my $alignment   = $hunk->{alignment};
@@ -52,12 +53,6 @@ sub _format {
        : " " x ($min_width - $replength) . $replacement;
 }
 
-has codes => (
-  is  => 'ro',
-  isa => 'HashRef',
-  required => 1,
-);
-
 my $regex = qr/
  (%                # leading '%'
   (-)?             # left-align, rather than right
@@ -68,11 +63,50 @@ my $regex = qr/
  )
 /x;
 
-sub BUILD {
-  my $codes = $_[0]->codes;
+sub codes { $_[0]->{codes} }
+
+my %METHODS;
+BEGIN {
+  %METHODS = (
+    format_hunker   => 'hunk_simply',
+    input_processor => 'return_input',
+    string_replacer => 'positional_replace',
+    hunk_formatter  => 'format_simply',
+  );
+  
+  no strict 'refs';
+  for my $method (keys %METHODS) {
+    *$method = sub { $_[0]->{ $method } };
+
+    my $default = "default_$method";
+    *$default = sub { $METHODS{ $method } };
+  }
+}
+
+sub new {
+  my ($class, $arg) = @_;
+
+  my $self = bless { codes => $arg->{codes} } => $class;
+
+  for (keys %METHODS) {
+    $self->{ $_ } = $arg->{ $_ } || do {
+      my $default_method = "default_$_";
+      $class->$default_method;
+    };
+
+    $self->{$_} = $self->can($self->{$_}) unless ref $self->{$_};
+  }
+
+  my $codes = $self->codes;
 
   Carp::confess("you must not supply a % format") if defined $codes->{'%'};
   $codes->{'%'} = '%';
+
+  return $self;
+}
+
+sub return_input {
+  return $_[1];
 }
 
 sub format {
@@ -82,18 +116,24 @@ sub format {
   Carp::croak("not enough arguments for stringf-based format")
     unless defined $format;
 
-  my $hunks = $self->_hunk($format);
+  my $hunker = $self->format_hunker;
+  my $hunks  = $self->$hunker($format);
 
-  $self->_process_args($hunks, \@_);
+  my $processor = $self->input_processor;
+  my $input = $self->$processor([ @_ ]);
 
-  ref($_) and $_ = $self->_format($_) for @$hunks;
+  my $replacer = $self->string_replacer;
+  $self->$replacer($hunks, $input);
+
+  my $formatter = $self->hunk_formatter;
+  ref($_) and $_ = $self->$formatter($_) for @$hunks;
 
   my $string = join q{}, @$hunks;
 
   return $string;
 }
 
-sub _hunk {
+sub hunk_simply {
   my ($self, $string) = @_;
 
   my @to_fmt;
@@ -117,7 +157,7 @@ sub _hunk {
   return \@to_fmt;
 }
 
-sub _process_args {
+sub positional_replace {
   my ($self, $hunks, $args) = @_;
 
   my $code = $self->codes;
