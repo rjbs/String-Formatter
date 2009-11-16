@@ -124,8 +124,6 @@ BEGIN {
   }
 }
 
-sub codes { $_[0]->{codes} }
-
 sub new {
   my ($class, $arg) = @_;
 
@@ -147,6 +145,8 @@ sub new {
 
   return $self;
 }
+
+sub codes { $_[0]->{codes} }
 
 sub format {
   my $self   = shift;
@@ -220,53 +220,47 @@ sub require_named_input {
 }
 
 sub __closure_replace {
-  my ($self, $hunks, $args, $closure) = @_;
+  my ($closure) = @_;
+  
+  return sub {
+    my ($self, $hunks, $input) = @_;
 
-  my $code = $self->codes;
-  my $nth = 0;
+    my $heap = {};
+    my $code = $self->codes;
 
-  for my $i (grep { ref $hunks->[$_] } 0 .. $#$hunks) {
-    my $hunk = $hunks->[ $i ];
-    my $conv = $code->{ $hunk->{formchar} };
+    for my $i (grep { ref $hunks->[$_] } 0 .. $#$hunks) {
+      my $hunk = $hunks->[ $i ];
+      my $conv = $code->{ $hunk->{formchar} };
 
-    Carp::croak("Unknown conversion in stringf-generated routine: $hunk->{formchar}") unless defined $conv;
+      Carp::croak("Unknown conversion in stringf: $hunk->{formchar}")
+        unless defined $conv;
 
-    if (ref $conv) {
-      $hunks->[ $i ]->{replacement} = $closure->($conv, $hunk);
-    } else {
-      $hunks->[ $i ]->{replacement} = $conv;
+      if (ref $conv) {
+        $hunks->[ $i ]->{replacement} = $self->$closure({
+          conv => $conv,
+          hunk => $hunk,
+          heap => $heap,
+          input => $input,
+        });
+      } else {
+        $hunks->[ $i ]->{replacement} = $conv;
+      }
     }
-  }
+  };
 }
 
-sub positional_replace {
-  my ($self, $hunks, $input) = @_;
+BEGIN {
+  *positional_replace = __closure_replace(sub {
+    my ($self, $arg) = @_;
+    local $_ = $arg->{input}->[ $arg->{heap}{nth}++ ];
+    return $arg->{conv}->($self, $_, $arg->{hunk}{passme});
+  });
 
-  my $nth = 0;
-
-  $self->__closure_replace(
-    $hunks,
-    $input,
-    sub {
-      my ($conv, $hunk) = @_;
-      local $_ = $input->[ $nth++ ];
-      return $conv->($self, $_, $hunk->{passme});
-    },
-  );
-}
-
-sub named_replace {
-  my ($self, $hunks, $input) = @_;
-
-  $self->__closure_replace(
-    $hunks,
-    $input,
-    sub {
-      my ($conv, $hunk) = @_;
-      local $_ = $input->{ $hunk->{passme} };
-      return $conv->($self, $_, $hunk->{passme});
-    },
-  );
+  *named_replace = __closure_replace(sub {
+    my ($self, $arg) = @_;
+    local $_ = $arg->{input}->{ $arg->{hunk}{passme} };
+    return $arg->{conv}->($self, $_, $arg->{hunk}{passme});
+  });
 }
 
 sub format_simply {
@@ -298,10 +292,8 @@ sub format_simply {
        : " " x ($min_width - $replength) . $replacement;
 }
 
-
 1;
 __END__
-
 
 =head1 CONVERSIONS
 
