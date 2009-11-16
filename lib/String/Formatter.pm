@@ -23,35 +23,16 @@ use Params::Util ();
 #   groups  => [ default => [qw(stringf)] ],
 # };
 
-sub _replace {
-  my ($self, $arg) = @_;
+sub _format {
+  my ($self, $hunk) = @_;
 
-  my $letter    = $self->codes;
-  my $orig      = $arg->{orig};
-  my $alignment = $arg->{alignment};
-  my $min_width = $arg->{min_width};
-  my $max_width = $arg->{max_width};
-  my $passme    = $arg->{passme};
-  my $formchar  = $arg->{formchar};
-  my $args      = $arg->{args};
-  my $i_ref     = $arg->{i_ref};
-
-  # For unknown escapes, return the orignial
-  unless (defined $letter->{$formchar}) {
-    Carp::croak("Unknown conversion in stringf-generated routine: %$formchar")
-  }
-
-  $alignment = '+' unless defined $alignment;
-
-  my $replacement = $letter->{$formchar};
-  if (ref $replacement eq 'CODE') {
-
-    # $passme gets passed to subrefs.
-    $passme ||= "";
-    $passme =~ s/\A{//g;
-    $passme =~ s/}\z//g;
-    $replacement = $replacement->($passme, $$i_ref, $args);
-  }
+  my $orig        = $hunk->{orig};
+  my $alignment   = $hunk->{alignment} || '+';
+  my $min_width   = $hunk->{min_width};
+  my $max_width   = $hunk->{max_width};
+  my $passme      = $hunk->{passme};
+  my $formchar    = $hunk->{formchar};
+  my $replacement = $hunk->{replacement};
 
   my $replength = length $replacement;
   $min_width ||= $replength;
@@ -89,7 +70,7 @@ my $regex = qr/
   (-)?             # left-align, rather than right
   ([0-9]*)?        # (optional) minimum field width
   (?:\.([0-9]*))?  # (optional) maximum field width
-  ({.*?})?         # (optional) stuff inside
+  (?:{(.*?)})?     # (optional) stuff inside
   (\S)             # actual format character
  )
 /x;
@@ -108,10 +89,23 @@ sub format {
   Carp::croak("not enough arguments for stringf-based format")
     unless defined $format;
 
-  my @to_fmt;
+  my $hunks = $self->_hunk($format);
 
+  $self->_process_args($hunks, \@_);
+
+  ref($_) and $_ = $self->_format($_) for @$hunks;
+
+  my $string = join q{}, @$hunks;
+
+  return $string;
+}
+
+sub _hunk {
+  my ($self, $string) = @_;
+
+  my @to_fmt;
   my $pos = 0;
-  while ($format =~ m{\G(.*?)$regex}g) {
+  while ($string =~ m{\G(.*?)$regex}g) {
     push @to_fmt, $1 if defined $1;
 
     push @to_fmt, {
@@ -123,27 +117,33 @@ sub format {
       formchar  => $7,
     };
 
-    $pos = pos $format;
+    $pos = pos $string;
   }
 
-  push @to_fmt, substr $format, $pos if $pos < length $format;
+  push @to_fmt, substr $string, $pos if $pos < length $string;
 
-  my $iterator = $self->_pos_iterator(\@_);
-  my $string = join q{}, @{ $self->$iterator(\@to_fmt) };
-
-  return $string;
+  return \@to_fmt;
 }
 
-sub _pos_iterator {
-  my ($self, $args) = @_;
+sub _process_args {
+  my ($self, $hunks, $args) = @_;
 
-  return sub {
-    my ($self, $to_fmt) = @_;
-    my @output = map { (ref) ? $self->_replace({ %$_, args => $args }) : $_ }
-                 @$to_fmt;
+  my $code = $self->codes;
+  my $nth = 0;
 
-    return \@output;
-  };
+  for my $i (grep { ref $hunks->[$_] } 0 .. $#$hunks) {
+    my $hunk = $hunks->[ $i ];
+    my $conv = $code->{ $hunk->{formchar} };
+
+    Carp::croak("Unknown conversion in stringf-generated routine: $hunk->{formchar}") unless defined $conv;
+
+    if (ref $conv) {
+      local $_ = $args->[ $nth ];
+      $hunks->[ $i ]->{replacement} = $conv->($self, $_, $hunk->{passme});
+    } else {
+      $hunks->[ $i ]->{replacement} = $conv;
+    }
+  }
 }
 
 1;
