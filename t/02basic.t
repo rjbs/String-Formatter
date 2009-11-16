@@ -78,3 +78,4 @@ throws_ok { $fmt->format(q(What is %z for?)); } qr/Unknown conversion/i;
   is($have, $want, "non-identifier format characters");
 }
 
+

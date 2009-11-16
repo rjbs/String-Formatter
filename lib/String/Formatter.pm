@@ -109,6 +109,15 @@ sub return_input {
   return $_[1];
 }
 
+sub require_named_input {
+  my ($self, $args) = @_;
+
+  Carp::croak("routine must be called with exactly one hashref arg")
+    if @$args != 1 or ! Params::Util::_HASHLIKE($args->[0]);
+
+  return $args->[0];
+}
+
 sub format {
   my $self   = shift;
   my $format = shift;
@@ -171,6 +180,31 @@ sub positional_replace {
 
     if (ref $conv) {
       local $_ = $args->[ $nth ];
+      $hunks->[ $i ]->{replacement} = $conv->($self, $_, $hunk->{passme});
+      $nth++;
+    } else {
+      $hunks->[ $i ]->{replacement} = $conv;
+    }
+  }
+}
+
+sub named_replace {
+  my ($self, $hunks, $input) = @_;
+
+  my $code = $self->codes;
+  my $nth = 0;
+
+  for my $i (grep { ref $hunks->[$_] } 0 .. $#$hunks) {
+    my $hunk = $hunks->[ $i ];
+    my $conv = $code->{ $hunk->{formchar} };
+
+    Carp::croak("Unknown conversion in stringf-generated routine: $hunk->{formchar}") unless defined $conv;
+
+    if (ref $conv) {
+      Carp::croak("no input for requested variable $hunk->{passme}")
+        unless exists $input->{ $hunk->{passme} };
+
+      local $_ = $input->{ $hunk->{passme} };
       $hunks->[ $i ]->{replacement} = $conv->($self, $_, $hunk->{passme});
     } else {
       $hunks->[ $i ]->{replacement} = $conv;
