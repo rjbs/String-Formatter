@@ -68,7 +68,7 @@ has codes => (
 my $regex = qr/
  (%                # leading '%'
   (-)?             # left-align, rather than right
-  ([0-9]*)?        # (optional) minimum field width
+  ([0-9]+)?        # (optional) minimum field width
   (?:\.([0-9]*))?  # (optional) maximum field width
   (?:{(.*?)})?     # (optional) stuff inside
   (\S)             # actual format character
@@ -105,10 +105,9 @@ sub _hunk {
 
   my @to_fmt;
   my $pos = 0;
-  while ($string =~ m{\G(.*?)$regex}g) {
-    push @to_fmt, $1 if defined $1;
 
-    push @to_fmt, {
+  while ($string =~ m{\G(.*?)$regex}g) {
+    push @to_fmt, $1, {
       orig      => $2,
       alignment => $3,
       min_width => $4,
