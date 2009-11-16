@@ -128,11 +128,22 @@ sub format {
 
   push @to_fmt, substr $format, $pos if $pos < length $format;
 
-  my $string = join q{},
-               map { (ref) ? $self->_replace({ %$_, args => \@_ }) : $_ }
-               @to_fmt;
+  my $iterator = $self->_pos_iterator(\@_);
+  my $string = join q{}, @{ $self->$iterator(\@to_fmt) };
 
   return $string;
+}
+
+sub _pos_iterator {
+  my ($self, $args) = @_;
+
+  return sub {
+    my ($self, $to_fmt) = @_;
+    my @output = map { (ref) ? $self->_replace({ %$_, args => $args }) : $_ }
+                 @$to_fmt;
+
+    return \@output;
+  };
 }
 
 1;
