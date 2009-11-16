@@ -166,8 +166,8 @@ sub hunk_simply {
   return \@to_fmt;
 }
 
-sub positional_replace {
-  my ($self, $hunks, $args) = @_;
+sub __closure_replace {
+  my ($self, $hunks, $args, $closure) = @_;
 
   my $code = $self->codes;
   my $nth = 0;
@@ -179,37 +179,41 @@ sub positional_replace {
     Carp::croak("Unknown conversion in stringf-generated routine: $hunk->{formchar}") unless defined $conv;
 
     if (ref $conv) {
-      local $_ = $args->[ $nth ];
-      $hunks->[ $i ]->{replacement} = $conv->($self, $_, $hunk->{passme});
-      $nth++;
+      $hunks->[ $i ]->{replacement} = $closure->($conv, $hunk);
     } else {
       $hunks->[ $i ]->{replacement} = $conv;
     }
   }
 }
 
+sub positional_replace {
+  my ($self, $hunks, $input) = @_;
+
+  my $nth = 0;
+
+  $self->__closure_replace(
+    $hunks,
+    $input,
+    sub {
+      my ($conv, $hunk) = @_;
+      local $_ = $input->[ $nth++ ];
+      return $conv->($self, $_, $hunk->{passme});
+    },
+  );
+}
+
 sub named_replace {
   my ($self, $hunks, $input) = @_;
 
-  my $code = $self->codes;
-  my $nth = 0;
-
-  for my $i (grep { ref $hunks->[$_] } 0 .. $#$hunks) {
-    my $hunk = $hunks->[ $i ];
-    my $conv = $code->{ $hunk->{formchar} };
-
-    Carp::croak("Unknown conversion in stringf-generated routine: $hunk->{formchar}") unless defined $conv;
-
-    if (ref $conv) {
-      Carp::croak("no input for requested variable $hunk->{passme}")
-        unless exists $input->{ $hunk->{passme} };
-
+  $self->__closure_replace(
+    $hunks,
+    $input,
+    sub {
+      my ($conv, $hunk) = @_;
       local $_ = $input->{ $hunk->{passme} };
-      $hunks->[ $i ]->{replacement} = $conv->($self, $_, $hunk->{passme});
-    } else {
-      $hunks->[ $i ]->{replacement} = $conv;
-    }
-  }
+      return $conv->($self, $_, $hunk->{passme});
+    },
+  );
 }
 
 1;
