@@ -26,12 +26,9 @@ use Params::Util ();
 sub _format {
   my ($self, $hunk) = @_;
 
-  my $orig        = $hunk->{orig};
   my $alignment   = $hunk->{alignment} || '+';
   my $min_width   = $hunk->{min_width};
   my $max_width   = $hunk->{max_width};
-  my $passme      = $hunk->{passme};
-  my $formchar    = $hunk->{formchar};
   my $replacement = $hunk->{replacement};
 
   my $replength = length $replacement;
