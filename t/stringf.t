@@ -1,7 +1,7 @@
 #!perl
 use strict;
 
-use Test::More tests => 2;
+use Test::More tests => 3;
 use Test::Exception;
 
 use String::Formatter
@@ -21,7 +21,24 @@ use String::Formatter
       r => sub { scalar reverse $_ },
     },
   },
+  named_stringf => {
+    -as => 'ns2',
+    codes           => {
+      f => sub { $_ },
+      r => sub { scalar reverse $_ },
+    },
+  },
 ;
+
+{
+  my $have = pos_stringf(
+    q(do it %f way and %r way),
+    qw(this that),
+  );
+  my $want = 'do it this way and taht way';
+
+  is($have, $want, "positional args via conversions");
+}
 
 {
   my $have = named_stringf(
@@ -34,11 +51,12 @@ use String::Formatter
 }
 
 {
-  my $have = pos_stringf(
-    q(do it %f way and %r way),
-    qw(this that),
+  my $have = ns2(
+    q(do it %{alfa}f way and %{beta}r way),
+    { alfa => 'this', beta => 'that' },
   );
   my $want = 'do it this way and taht way';
 
-  is($have, $want, "positional args via conversions");
+  is($have, $want, "named args via conversions (named_stringf import)");
 }
+

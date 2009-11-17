@@ -63,6 +63,13 @@ behaviors, which are installed with different names.  Since the behavior of
 these routines is based on the C<format> method of a String::Formatter object,
 the rest of the documentation will describe the way the object behaves.
 
+There's also a C<named_stringf> export, which behaves just like the C<stringf>
+export, but defaults to the C<named_replacer> and C<require_named_input>
+arguments.  For more information on these, keep reading.
+
+In the future, a L<cookbook|String::Formatter::Cookbook> of recipes will be
+provided.
+
 =head1 FORMAT STRINGS
 
 Format strings are generally assumed to look like Perl's sprintf's format
@@ -96,15 +103,23 @@ require 5.006;
 
 use Params::Util ();
 use Sub::Exporter -setup => {
-  exports => [ stringf => \'_build_stringf' ],
+  exports => {
+    stringf => sub {
+      my ($class, $name, $arg, $col) = @_;
+      my $formatter = $class->new($arg);
+      return sub { $formatter->format(@_) };
+    },
+    named_stringf => sub {
+      my ($class, $name, $arg, $col) = @_;
+      my $formatter = $class->new({
+        input_processor => 'require_named_input',
+        string_replacer => 'named_replace',
+        %$arg,
+      });
+      return sub { $formatter->format(@_) };
+    },
+  },
 };
-
-sub _build_stringf {
-  my ($class, $name, $arg, $col) = @_;
-  
-  my $formatter = $class->new($arg);
-  return sub { $formatter->format(@_) };
-}
 
 my %METHODS;
 BEGIN {
