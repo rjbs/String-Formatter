@@ -21,15 +21,16 @@ may change substantially before this warning goes away!
     codes => {
       f => sub { $_ },
       b => sub { scalar reverse $_ },
+      o => 'Okay?',
     },
   };
 
 
-  print str_rf('This is %10f and this is %-15b.', 'forward', 'backward');
+  print str_rf('This is %10f and this is %-15b, %o', 'forward', 'backward');
 
 ...prints...
 
-  This is    forward and this is drawkcab       .
+  This is    forward and this is drawkcab       , okay?
 
 =head1 DESCRIPTION
 
