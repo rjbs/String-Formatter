@@ -1,4 +1,8 @@
 Revision history for {{$dist->name}}
 
+0.093210  2009-11-17
+          add the cookbook
+          add method importer
+
 0.093200  2009-11-16
           first release!

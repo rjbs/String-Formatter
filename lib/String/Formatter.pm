@@ -25,7 +25,6 @@ may change substantially before this warning goes away!
     },
   };
 
-
   print str_rf('This is %10f and this is %-15b, %o', 'forward', 'backward');
 
 ...prints...
@@ -74,11 +73,13 @@ these routines is based on the C<format> method of a String::Formatter object,
 the rest of the documentation will describe the way the object behaves.
 
 There's also a C<named_stringf> export, which behaves just like the C<stringf>
-export, but defaults to the C<named_replacer> and C<require_named_input>
-arguments.  For more information on these, keep reading.
+export, but defaults to the C<named_replace> and C<require_named_input>
+arguments, and a C<method_stringf> export, which defaults C<method_replace> and
+C<require_single_input>.  For more on these, keep reading, and check out the
+cookbook.
 
-In the future, a L<cookbook|String::Formatter::Cookbook> of recipes will be
-provided.
+L<String::Formatter::Cookbook> provides a number of recipes for ways to put
+String::Formatter to use.
 
 =head1 FORMAT STRINGS
 
@@ -117,6 +118,15 @@ use Sub::Exporter -setup => {
     stringf => sub {
       my ($class, $name, $arg, $col) = @_;
       my $formatter = $class->new($arg);
+      return sub { $formatter->format(@_) };
+    },
+    method_stringf => sub {
+      my ($class, $name, $arg, $col) = @_;
+      my $formatter = $class->new({
+        input_processor => 'require_single_input',
+        string_replacer => 'method_replace',
+        %$arg,
+      });
       return sub { $formatter->format(@_) };
     },
     named_stringf => sub {
@@ -338,6 +348,40 @@ sub require_named_input {
   return $args->[0];
 }
 
+=method require_single_input
+
+This input processor will raise an exception if more than one input is given.
+After input processing, the single element in the input will be used as the
+input itself.
+
+=cut
+
+sub require_single_input {
+  my ($self, $args) = @_;
+
+  Carp::croak("routine must be called with exactly one argument after string")
+    if @$args != 1;
+
+  return $args->[0];
+}
+
+=method forbid_input
+
+This input processor will raise an exception if any input is given.  In other
+words, formatters with this input processor accept format strings and nothing
+else.
+
+=cut
+
+sub forbid_input {
+  my ($self, $args) = @_;
+
+  Carp::croak("routine must be called with no arguments after format string")
+    if @$args;
+
+  return $args;
+}
+
 =method string_replacer
 
 The string_replacer phase is responsible for adding a C<replacement> entry to
@@ -420,6 +464,37 @@ BEGIN {
     local $_ = $arg->{input}->{ $arg->{hunk}{passme} };
     return $arg->{conv}->($self, $_, $arg->{hunk}{passme});
   });
+}
+
+=method method_replace
+
+This string replacer method expects the input to be a single value on which
+methods can be called.  If a value was given in braces to the format code, it
+is passed as an argument.
+
+=cut
+
+sub method_replace {
+  my ($self, $hunks, $input) = @_;
+
+  my $heap = {};
+  my $code = $self->codes;
+
+  for my $i (grep { ref $hunks->[$_] } 0 .. $#$hunks) {
+    my $hunk = $hunks->[ $i ];
+    my $conv = $code->{ $hunk->{formchar} };
+
+    Carp::croak("Unknown conversion in stringf: $hunk->{formchar}")
+      unless defined $conv;
+
+    if (ref $conv) {
+      $hunks->[ $i ]->{replacement} = $input->$conv($hunk->{passme});
+    } else {
+      $hunks->[ $i ]->{replacement} = $input->$conv(
+        defined $hunk->{passme} ? $hunk->{passme} : ()
+      );
+    }
+  }
 }
 
 =method hunk_formatter

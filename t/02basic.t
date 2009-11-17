@@ -2,7 +2,6 @@
 use strict;
 
 use Test::More tests => 10;
-use Test::Exception;
 
 use String::Formatter;
 
@@ -46,7 +45,11 @@ my $fmt = String::Formatter->new({
   is($have, $want, "formatting with no %codes");
 }
 
-throws_ok { $fmt->format(q(What is %z for?)); } qr/Unknown conversion/i;
+{
+  my $ok    = eval { $fmt->format(q(What is %z for?)); 1 };
+  my $error = $@;
+  like($error, qr/Unknown conversion/i, 'unknown conversions are fatal');
+}
 
 {
   my $have = $fmt->format("We have %.5w.");
