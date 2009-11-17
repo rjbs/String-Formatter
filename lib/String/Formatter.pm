@@ -5,6 +5,15 @@ package String::Formatter;
 
 our $VERSION = '1.16';
 
+=begin :prelude
+
+=head1 WARNING
+
+This module is brand new (as of today, 2009-11-16) and parts of its interface
+may change substantially before this warning goes away!
+
+=end :prelude
+
 =head1 SYNOPSIS
 
   use String::Formatter stringf => {
