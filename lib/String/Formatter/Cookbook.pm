@@ -2,7 +2,6 @@ use strict;
 use warnings;
 package String::Formatter::Cookbook;
 # ABSTRACT: ways to put String::Formatter to use
-die "this module is meant to be indexed, not loaded";
 1;
 
 =encoding utf-8
@@ -159,5 +158,3 @@ You can easily use this to implement an actual stringf-like method:
   }
 
 =cut
-
-1;
