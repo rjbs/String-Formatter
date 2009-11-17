@@ -414,30 +414,17 @@ of the replacement string.
 sub format_simply {
   my ($self, $hunk) = @_;
 
-  my $alignment   = $hunk->{alignment};
-  my $min_width   = $hunk->{min_width};
-  my $max_width   = $hunk->{max_width};
   my $replacement = $hunk->{replacement};
+  my $replength   = length $replacement;
 
-  my $replength = length $replacement;
-  $min_width ||= $replength;
-  $max_width ||= $replength;
+  my $alignment   = $hunk->{alignment} || '';
+  my $min_width   = $hunk->{min_width} || 0;
+  my $max_width   = $hunk->{max_width} || $replength;
 
-  # length of replacement is between min and max
-  if (($replength > $min_width) && ($replength < $max_width)) {
-    return $replacement;
-  }
+  $min_width ||= $replength > $min_width ? $min_width : $replength;
+  $max_width ||= $max_width > $replength ? $max_width : $replength;
 
-  # length of replacement is longer than max; truncate
-  if ($replength > $max_width) {
-    return substr($replacement, 0, $max_width);
-  }
-
-  # length of replacement is less than min: pad
-  # alignment can only be '-' or undef, so - is true -- rjbs, 2009-11-16
-  return $alignment
-       ? $replacement . " " x ($min_width - $replength)
-       : " " x ($min_width - $replength) . $replacement;
+  return sprintf "%$alignment${min_width}.${max_width}s", $replacement;
 }
 
 1;

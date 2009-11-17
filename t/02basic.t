@@ -18,8 +18,8 @@ my $fmt = String::Formatter->new({
 });
 
 {
-  my $have = $fmt->format(q(please have some %w));
-  my $want = 'please have some watermelons';
+  my $have = $fmt->format(qq(please have some %w\n));
+  my $want = "please have some watermelons\n";
 
   is($have, $want, "formatting with no text after last code");
 }
