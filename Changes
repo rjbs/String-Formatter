@@ -1,5 +1,8 @@
 Revision history for {{$dist->name}}
 
+{{$NEXT}}
+          fix a problem with prereqs and tests
+
 0.093210  2009-11-17
           add the cookbook
           add method importer
