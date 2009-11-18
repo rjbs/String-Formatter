@@ -1,6 +1,11 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.093221  2009-11-18 08:13:22 America/New_York
+          remove stupidly left-in hardcoded version!
+
+0.093220  2009-11-18 08:12:10 America/New_York
           fix a problem with prereqs and tests
 
 0.093210  2009-11-17

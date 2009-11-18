@@ -3,8 +3,6 @@ use warnings;
 package String::Formatter;
 # ABSTRACT: build sprintf-like functions of your own
 
-our $VERSION = '1.16';
-
 =begin :prelude
 
 =head1 WARNING
