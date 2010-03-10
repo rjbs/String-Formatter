@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.100680  2010-03-09 20:54:11 America/New_York
           bug fix: newlines no longer end formatting, but not allowed in braces
           (thanks for bug report, Christopher J. Madsen)
 
