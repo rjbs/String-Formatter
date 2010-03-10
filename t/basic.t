@@ -1,14 +1,14 @@
 #!perl
 use strict;
 
-use Test::More tests => 10;
+use Test::More tests => 11;
 
 use String::Formatter;
 
 my $fmt = String::Formatter->new({
   codes => {
     a => "apples",
-    b => "bannanas",
+    b => "bananas",
     g => "grapefruits",
     m => "melons",
     w => "watermelons",
@@ -24,6 +24,13 @@ my $fmt = String::Formatter->new({
 }
 
 {
+  my $have = $fmt->format(qq(w: %w\nb: %b\n));
+  my $want = "w: watermelons\nb: bananas\n";
+
+  is($have, $want, "format with multiple newlines");
+}
+
+{
   my $have = $fmt->format(q(10%% discount on %w));
   my $want = '10% discount on watermelons';
 
@@ -32,7 +39,7 @@ my $fmt = String::Formatter->new({
 
 {
   my $have = $fmt->format(q(I like %a, %b, and %g, but not %m or %w.));
-  my $want = 'I like apples, bannanas, and grapefruits, '
+  my $want = 'I like apples, bananas, and grapefruits, '
            . 'but not melons or watermelons.';
 
   is($have, $want, "formatting with text after last code");

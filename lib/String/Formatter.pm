@@ -292,7 +292,7 @@ sub hunk_simply {
   my @to_fmt;
   my $pos = 0;
 
-  while ($string =~ m{\G(.*?)$regex}g) {
+  while ($string =~ m{\G(.*?)$regex}gs) {
     push @to_fmt, $1, {
       orig      => $2,
       alignment => $3,
