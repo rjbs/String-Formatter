@@ -2,6 +2,9 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.100690  2010-03-10 21:09:36 America/New_York
+          fix a 5.10-ism that slipped in
+
 0.100680  2010-03-09 20:54:11 America/New_York
           bug fix: newlines no longer end formatting, but not allowed in braces
           (thanks for bug report, Christopher J. Madsen)
