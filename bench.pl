@@ -1,5 +1,5 @@
+#!perl -l
 use strict;
-use 5.010;
 use lib 'lib';
 
 use Benchmark;
@@ -20,11 +20,11 @@ my $index_format = String::Format->stringfactory($hash);
 
 my $tt2 = Template->new;
 
-say $index_format->("I like to eat %a and %b.");
-say $fmt->format("I like to eat %a and %b.");
+print $index_format->("I like to eat %a and %b.");
+print $fmt->format("I like to eat %a and %b.");
 
 $tt2->process(\'I like to eat [%a%] and [%b%].', $hash, \my $str);
-say $str;
+print $str;
 
 timethese(100_000, {
   dlc  => sub { $index_format->("I like to eat %a and %b.") },
