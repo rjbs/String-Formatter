@@ -2,10 +2,14 @@
 use strict;
 use lib 'lib';
 
-use Benchmark;
-use String::Format;
 use String::Formatter;
-use Template;
+
+# Ha ha ha.  I am avoiding AutoPrereq from the following.
+eval "
+  use Benchmark;
+  use Template;
+  use String::Format;
+";
 
 my $hash = {
   a => 'apples',

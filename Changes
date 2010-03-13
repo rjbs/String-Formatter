@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+          fix an ancillary file that brought in a bunch of bogus prereqs
 
 0.100690  2010-03-10 21:09:36 America/New_York
           fix a 5.10-ism that slipped in
