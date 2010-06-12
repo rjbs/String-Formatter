@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.101620  2010-06-11 21:31:26 America/New_York
           add indexed_replace, require_arrayref_input, and indexed_stringf
 
 0.100720  2010-03-13 09:36:03 America/New_York
