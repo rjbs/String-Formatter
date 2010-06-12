@@ -72,9 +72,10 @@ the rest of the documentation will describe the way the object behaves.
 
 There's also a C<named_stringf> export, which behaves just like the C<stringf>
 export, but defaults to the C<named_replace> and C<require_named_input>
-arguments, and a C<method_stringf> export, which defaults C<method_replace> and
-C<require_single_input>.  For more on these, keep reading, and check out the
-cookbook.
+arguments.  There's a C<method_stringf> export, which defaults
+C<method_replace> and C<require_single_input>.  Finally, a C<indexed_stringf>,
+which defaults to C<indexed_replaced> and C<require_arrayref_input>.  For more
+on these, keep reading, and check out the cookbook.
 
 L<String::Formatter::Cookbook> provides a number of recipes for ways to put
 String::Formatter to use.
@@ -132,6 +133,15 @@ use Sub::Exporter -setup => {
       my $formatter = $class->new({
         input_processor => 'require_named_input',
         string_replacer => 'named_replace',
+        %$arg,
+      });
+      return sub { $formatter->format(@_) };
+    },
+    indexed_stringf => sub {
+      my ($class, $name, $arg, $col) = @_;
+      my $formatter = $class->new({
+        input_processor => 'require_arrayref_input',
+        string_replacer => 'indexed_replace',
         %$arg,
       });
       return sub { $formatter->format(@_) };
@@ -346,6 +356,24 @@ sub require_named_input {
   return $args->[0];
 }
 
+=method require_arrayref_input
+
+This input processor will raise an exception unless there is exactly one
+post-format-string argument to the format call, and unless that argument is a
+arrayref.  It will also replace the input with that single arrayref it found so
+subsequent phases of the format can avoid lots of needless array dereferencing.
+
+=cut
+
+sub require_arrayref_input {
+  my ($self, $args) = @_;
+
+  Carp::croak("routine must be called with exactly one arrayref arg")
+    if @$args != 1 or ! Params::Util::_ARRAYLIKE($args->[0]);
+
+  return $args->[0];
+}
+
 =method require_single_input
 
 This input processor will raise an exception if more than one input is given.
@@ -418,6 +446,15 @@ an example use:
     num => 6,
   });
 
+=method indexed_replace
+
+This replacer should be used with the C<require_arrayref_input> input
+processor.  It expects the input to be an arrayref and it finds values to be
+interpolated by looking in the arrayref for the brace-enclosed index on each
+format code.  Here's an example use:
+
+  $formatter->format("This was the %{1}s day in %{0}d weeks.", [ 6, 'best' ]);
+
 =cut
 
 sub __closure_replace {
@@ -460,6 +497,12 @@ BEGIN {
   *named_replace = __closure_replace(sub {
     my ($self, $arg) = @_;
     local $_ = $arg->{input}->{ $arg->{hunk}{passme} };
+    return $arg->{conv}->($self, $_, $arg->{hunk}{passme});
+  });
+
+  *indexed_replace = __closure_replace(sub {
+    my ($self, $arg) = @_;
+    local $_ = $arg->{input}->[ $arg->{hunk}{passme} ];
     return $arg->{conv}->($self, $_, $arg->{hunk}{passme});
   });
 }

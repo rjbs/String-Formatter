@@ -1,7 +1,7 @@
 #!perl
 use strict;
 
-use Test::More tests => 3;
+use Test::More;
 
 use String::Formatter
   stringf => {
@@ -27,6 +27,12 @@ use String::Formatter
       r => sub { scalar reverse $_ },
     },
   },
+  indexed_stringf => {
+    codes           => {
+      f => sub { $_ },
+      r => sub { scalar reverse $_ },
+    },
+  }
 ;
 
 {
@@ -59,3 +65,14 @@ use String::Formatter
   is($have, $want, "named args via conversions (named_stringf import)");
 }
 
+{
+  my $have = indexed_stringf(
+    q(do it %{1}f way and %{0}r way),
+    [ qw(that this) ],
+  );
+  my $want = 'do it this way and taht way';
+
+  is($have, $want, "named args via conversions (indexed_stringf import)");
+}
+
+done_testing;
