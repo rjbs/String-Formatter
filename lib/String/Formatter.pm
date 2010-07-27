@@ -304,10 +304,11 @@ sub hunk_simply {
 
   while ($string =~ m{\G(.*?)$regex}gs) {
     push @to_fmt, $1, {
-      orig      => $2,
       alignment => $3,
       min_width => $4,
       max_width => $5,
+
+      literal     => $2,
       argument    => $6,
       conversion  => $7,
     };
