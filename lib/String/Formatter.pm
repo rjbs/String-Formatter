@@ -308,8 +308,8 @@ sub hunk_simply {
       alignment => $3,
       min_width => $4,
       max_width => $5,
-      passme    => $6,
-      formchar  => $7,
+      argument    => $6,
+      conversion  => $7,
     };
 
     $pos = pos $string;
@@ -468,9 +468,9 @@ sub __closure_replace {
 
     for my $i (grep { ref $hunks->[$_] } 0 .. $#$hunks) {
       my $hunk = $hunks->[ $i ];
-      my $conv = $code->{ $hunk->{formchar} };
+      my $conv = $code->{ $hunk->{conversion} };
 
-      Carp::croak("Unknown conversion in stringf: $hunk->{formchar}")
+      Carp::croak("Unknown conversion in stringf: $hunk->{conversion}")
         unless defined $conv;
 
       if (ref $conv) {
@@ -491,19 +491,19 @@ BEGIN {
   *positional_replace = __closure_replace(sub {
     my ($self, $arg) = @_;
     local $_ = $arg->{input}->[ $arg->{heap}{nth}++ ];
-    return $arg->{conv}->($self, $_, $arg->{hunk}{passme});
+    return $arg->{conv}->($self, $_, $arg->{hunk}{argument});
   });
 
   *named_replace = __closure_replace(sub {
     my ($self, $arg) = @_;
-    local $_ = $arg->{input}->{ $arg->{hunk}{passme} };
-    return $arg->{conv}->($self, $_, $arg->{hunk}{passme});
+    local $_ = $arg->{input}->{ $arg->{hunk}{argument} };
+    return $arg->{conv}->($self, $_, $arg->{hunk}{argument});
   });
 
   *indexed_replace = __closure_replace(sub {
     my ($self, $arg) = @_;
-    local $_ = $arg->{input}->[ $arg->{hunk}{passme} ];
-    return $arg->{conv}->($self, $_, $arg->{hunk}{passme});
+    local $_ = $arg->{input}->[ $arg->{hunk}{argument} ];
+    return $arg->{conv}->($self, $_, $arg->{hunk}{argument});
   });
 }
 
@@ -523,16 +523,16 @@ sub method_replace {
 
   for my $i (grep { ref $hunks->[$_] } 0 .. $#$hunks) {
     my $hunk = $hunks->[ $i ];
-    my $conv = $code->{ $hunk->{formchar} };
+    my $conv = $code->{ $hunk->{conversion} };
 
-    Carp::croak("Unknown conversion in stringf: $hunk->{formchar}")
+    Carp::croak("Unknown conversion in stringf: $hunk->{conversion}")
       unless defined $conv;
 
     if (ref $conv) {
-      $hunks->[ $i ]->{replacement} = $input->$conv($hunk->{passme});
+      $hunks->[ $i ]->{replacement} = $input->$conv($hunk->{argument});
     } else {
       $hunks->[ $i ]->{replacement} = $input->$conv(
-        defined $hunk->{passme} ? $hunk->{passme} : ()
+        defined $hunk->{argument} ? $hunk->{argument} : ()
       );
     }
   }
