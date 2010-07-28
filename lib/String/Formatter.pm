@@ -276,13 +276,35 @@ sub format {
 Format hunkers are passed strings and return arrayrefs containing strings (for
 fixed content) and hashrefs (for formatting code sections).
 
-The semantics of the hashrefs returned are not yet stable enough to be worth
-documenting.
+The hashref hunks should contain at least two entries:  C<conversion> for the
+conversion code (the s, d, or u in %s, %d, or %u); and C<literal> for the
+complete original text of the hunk.  For example, a bare minimum hunker should
+turn the following:
+
+  I would like to buy %d %s today.
+
+...into...
+
+  [
+    'I would like to buy ',
+    { conversion => 'd', literal => '%d' },
+    ' ',
+    { conversion => 's', literal => '%d' },
+    ' today.',
+  ]
+
+Another common entry is C<argument>.  In the format strings expected by
+C<hunk_simply>, for example, these are free strings inside of curly braces.
+These are used extensively other existing helpers for things liked accessing
+named arguments or providing method names.
 
 =method hunk_simply
 
 This is the default format hunker.  It implements the format string semantics
 L<described above|/FORMAT STRINGS>.
+
+This hunker will produce C<argument> and C<conversion> and C<literal>.  Its
+other entries are not yet well-defined for public consumption.
 
 =cut
 
