@@ -2,6 +2,9 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.102080  2010-07-27 22:07:11 America/New_York
+          input hunkers have been tweaked and more fully documented
+
 0.101620  2010-06-11 21:31:26 America/New_York
           add indexed_replace, require_arrayref_input, and indexed_stringf
 
