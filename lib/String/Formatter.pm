@@ -157,7 +157,7 @@ BEGIN {
     string_replacer => 'positional_replace',
     hunk_formatter  => 'format_simply',
   );
-  
+
   no strict 'refs';
   for my $method (keys %METHODS) {
     *$method = sub { $_[0]->{ $method } };
@@ -482,7 +482,7 @@ format code.  Here's an example use:
 
 sub __closure_replace {
   my ($closure) = @_;
-  
+
   return sub {
     my ($self, $hunks, $input) = @_;
 
