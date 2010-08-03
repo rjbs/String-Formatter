@@ -107,6 +107,19 @@ Some additional format semantics may be added, but probably nothing exotic.
 Even things like C<2$> and C<*> are probably not going to appear in
 String::Formatter's default behavior.
 
+Another subtle difference, introduced intentionally, is in the handling of
+C<%%>.  With the default String::Formatter behavior, string C<%%> is not
+interpreted as a formatting code.  This is different from the behavior of
+Perl's C<sprintf>, which interprets it as a special formatting character that
+doesn't consume input and always acts like the fixed string C<%>.  The upshot
+of this is:
+
+  sprintf "%%";   # ==> returns "%"
+  stringf "%%";   # ==> returns "%%"
+
+  sprintf "%10%"; # ==> returns "         %"
+  stringf "%10%"; # ==> dies: unknown format code %
+
 =cut
 
 require 5.006;
@@ -228,9 +241,6 @@ sub new {
 
   my $codes = $self->codes;
 
-  Carp::confess("you must not supply a % format") if defined $codes->{'%'};
-  $codes->{'%'} = '%';
-
   return $self;
 }
 
@@ -334,6 +344,8 @@ sub hunk_simply {
       argument    => $6,
       conversion  => $7,
     };
+
+    $to_fmt[-1] = '%' if $to_fmt[-1]{literal} eq '%%';
 
     $pos = pos $string;
   }
@@ -510,6 +522,7 @@ sub __closure_replace {
   };
 }
 
+# $self->$string_replacer($hunks, $input);
 BEGIN {
   *positional_replace = __closure_replace(sub {
     my ($self, $arg) = @_;

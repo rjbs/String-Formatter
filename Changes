@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+          implement %% in a simpler, but not quite perl-like, way
 
 0.102080  2010-07-27 22:07:11 America/New_York
           input hunkers have been tweaked and more fully documented
