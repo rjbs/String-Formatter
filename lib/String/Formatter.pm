@@ -225,10 +225,19 @@ names) or coderefs.  The semantics for each method are descibed in the methods' 
 
 =cut
 
+sub default_codes {
+  return {};
+}
+
 sub new {
   my ($class, $arg) = @_;
 
-  my $self = bless { codes => $arg->{codes} } => $class;
+  my $_codes = {
+    %{ $class->default_codes },
+    %{ $arg->{codes} || {} },
+  };
+
+  my $self = bless { codes => $_codes } => $class;
 
   for (keys %METHODS) {
     $self->{ $_ } = $arg->{ $_ } || do {
