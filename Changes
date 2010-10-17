@@ -1,6 +1,10 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.102081  2010-10-17 13:40:26 America/New_York
+          allow subclasses to provide default_codes
+
           implement %% in a simpler, but not quite perl-like, way
 
 0.102080  2010-07-27 22:07:11 America/New_York
