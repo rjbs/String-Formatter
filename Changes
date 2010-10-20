@@ -3,6 +3,7 @@ Revision history for {{$dist->name}}
 {{$NEXT}}
 
 0.102082  2010-10-19 14:34:34 America/New_York
+          add missing prereq for Test::More
 
 0.102081  2010-10-17 13:40:26 America/New_York
           allow subclasses to provide default_codes
