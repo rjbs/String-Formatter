@@ -56,7 +56,7 @@ behavior.)
     "My name is %s.  I am about %l feet tall.  I use an %e alphabet.\n",
     'Ricardo',
     'ffffff',
-    'abcchdefghijklmnñopqrrrstuvwxyz',
+    'abcchdefghijklllmnñopqrrrstuvwxyz',
   );
 
   # Output:
