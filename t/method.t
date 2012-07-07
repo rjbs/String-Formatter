@@ -1,7 +1,7 @@
 #!perl
 use strict;
 
-use Test::More tests => 1;
+use Test::More tests => 2;
 
 use String::Formatter;
 
@@ -33,3 +33,21 @@ use String::Formatter;
     is($have, $want, "method_replace GOOD. fire BAD");
   }
 }
+
+{
+  my $coderef = String::Formatter->new({
+      input_processor => 'require_single_input',
+      string_replacer => 'method_replace',
+      codes => {
+          f => sub { $_->{foo} },
+          r => sub { $_->{bar} },
+      },
+  });
+
+  is(
+    $coderef->format('%f => %r', { foo => 'FOO', bar => 'BAR' }),
+    'FOO => BAR',
+    'topicalized method replace',
+  )
+}
+

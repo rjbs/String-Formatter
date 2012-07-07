@@ -88,4 +88,3 @@ my $fmt = String::Formatter->new({
   is($have, $want, "non-identifier format characters");
 }
 
-

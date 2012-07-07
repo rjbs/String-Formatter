@@ -574,8 +574,10 @@ sub method_replace {
       unless defined $conv;
 
     if (ref $conv) {
+      local $_ = $input;
       $hunks->[ $i ]->{replacement} = $input->$conv($hunk->{argument});
     } else {
+      local $_ = $input;
       $hunks->[ $i ]->{replacement} = $input->$conv(
         defined $hunk->{argument} ? $hunk->{argument} : ()
       );
