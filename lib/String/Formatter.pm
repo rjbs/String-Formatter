@@ -585,6 +585,29 @@ sub method_replace {
   }
 }
 
+sub keyed_replace {
+  my ($self, $hunks, $input) = @_;
+
+  my $heap = {};
+  my $code = $self->codes;
+
+  for my $i (grep { ref $hunks->[$_] } 0 .. $#$hunks) {
+    my $hunk = $hunks->[ $i ];
+    my $conv = $code->{ $hunk->{conversion} };
+
+    Carp::croak("Unknown conversion in stringf: $hunk->{conversion}")
+      unless defined $conv;
+
+    if (ref $conv) {
+      local $_ = $input;
+      $hunks->[ $i ]->{replacement} = $input->$conv($hunk->{argument});
+    } else {
+      local $_ = $input;
+      $hunks->[ $i ]->{replacement} = $input->{$conv};
+    }
+  }
+}
+
 =method hunk_formatter
 
 The hunk_formatter processes each the hashref hunks left after string

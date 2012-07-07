@@ -88,3 +88,25 @@ my $fmt = String::Formatter->new({
   is($have, $want, "non-identifier format characters");
 }
 
+{
+  my $fmt = String::Formatter->new({
+    input_processor => 'require_single_input',
+    string_replacer => 'keyed_replace',
+
+    codes => {
+      g => 'groan',
+      r => 'request',
+    },
+  });
+
+  {
+    my $zombie = {
+        groan => 'nnnnngh',
+        request => "Send... more...brainz...",
+    };
+    my $have = $fmt->format(q(%g... zombie says: %r), $zombie);
+    my $want = "nnnnngh... zombie says: Send... more...brainz...";
+    is($have, $want, "keyed_replace GOOD. fire BAD");
+  }
+}
+
