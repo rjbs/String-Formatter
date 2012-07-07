@@ -560,6 +560,7 @@ is passed as an argument.
 
 =cut
 
+# should totally be rewritten with commonality with keyed_replace factored out
 sub method_replace {
   my ($self, $hunks, $input) = @_;
 
@@ -585,6 +586,18 @@ sub method_replace {
   }
 }
 
+=method keyed_replace
+
+This string replacer method expects the input to be a single hashref.  Coderef
+code values are used as callbacks, but strings are used as hash keys.  If a
+value was given in braces to the format code, it is ignored.
+
+For example if the codes contain C<< i => 'ident' >> then C<%i> in the format
+string will be replaced with C<< $input->{ident} >> in the output.
+
+=cut
+
+# should totally be rewritten with commonality with method_replace factored out
 sub keyed_replace {
   my ($self, $hunks, $input) = @_;
 
