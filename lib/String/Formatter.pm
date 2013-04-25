@@ -3,15 +3,6 @@ use warnings;
 package String::Formatter;
 # ABSTRACT: build sprintf-like functions of your own
 
-=begin :prelude
-
-=head1 WARNING
-
-This module is brand new (as of today, 2009-11-16) and parts of its interface
-may change substantially before this warning goes away!
-
-=end :prelude
-
 =head1 SYNOPSIS
 
   use String::Formatter stringf => {
