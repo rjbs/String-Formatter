@@ -2,7 +2,7 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
-0.102083  2013-11-08 22:28:42 America/New_York
+0.102084  2013-11-08 22:30:46 America/New_York
         - typo fixes
         - update repo and bugtracker links
 
