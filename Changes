@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+        - typo fixes
+        - update repo and bugtracker links
 
 0.102082  2010-10-19 14:34:34 America/New_York
           add missing prereq for Test::More

@@ -1,7 +1,7 @@
 #!perl
 use strict;
 
-use Test::More tests => 11;
+use Test::More tests => 12;
 
 use String::Formatter;
 
