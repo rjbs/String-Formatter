@@ -41,7 +41,7 @@ format string, an exception will be raised.
 
 Another common pattern is to create a routine that behaves like Perl's
 C<sprintf>, but with a different set of conversion routines.  (It will also
-almost ceratinly have much simpler semantics than Perl's wildly complex
+almost certainly have much simpler semantics than Perl's wildly complex
 behavior.)
 
   use String::Formatter stringf => {

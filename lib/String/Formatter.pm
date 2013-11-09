@@ -88,7 +88,7 @@ of Perl's astonishingly large and complex system.  That subset looks like this:
   s    - a short string (usually one character) identifying the conversion
 
 Not all format modifiers found in Perl's C<sprintf> are yet supported.
-Currently the only format modifers must match:
+Currently the only format modifiers must match:
 
     (-)?          # left-align, rather than right
     (\d*)?        # (optional) minimum field width
@@ -212,7 +212,8 @@ in five phases:
 
 The defaults are found by calling C<default_WHATEVER> for each helper that
 isn't given.  Values must be either strings (which are interpreted as method
-names) or coderefs.  The semantics for each method are descibed in the methods' sections, below.
+names) or coderefs.  The semantics for each method are described in the
+methods' sections, below.
 
 =cut
 
