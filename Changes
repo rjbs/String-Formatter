@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+        - move bench.pl from dist root so it won't get installed to @INC
 
 0.102084  2013-11-08 22:30:46 America/New_York
         - typo fixes

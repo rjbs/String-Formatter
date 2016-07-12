@@ -5,7 +5,7 @@ use lib 'lib';
 use String::Formatter;
 
 # Ha ha ha.  I am avoiding AutoPrereq from the following.
-eval "
+die $@ unless eval "
   use Benchmark;
   use Template;
   use String::Format;
