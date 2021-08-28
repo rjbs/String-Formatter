@@ -1,3 +1,4 @@
+use v5.8.0;
 use strict;
 use warnings;
 package String::Formatter;
@@ -112,8 +113,6 @@ of this is:
   stringf "%10%"; # ==> dies: unknown format code %
 
 =cut
-
-require 5.006;
 
 use Params::Util ();
 use Sub::Exporter -setup => {
