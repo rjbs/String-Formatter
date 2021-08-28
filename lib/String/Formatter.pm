@@ -172,13 +172,6 @@ BEGIN {
 
 =method new
 
-=for Pod::Coverage
-  codes 
-  default_format_hunker
-  default_input_processor
-  default_string_replacer
-  default_hunk_formatter
-
   my $formatter = String::Formatter->new({
     codes => { ... },
     format_hunker   => ...,
@@ -654,3 +647,11 @@ repository.  All bugs should be reported to Ricardo Signes and
 String::Formatter.  Very little of the original code remains.
 
 =end :postlude
+
+=for Pod::Coverage
+  codes
+  default_format_hunker
+  default_input_processor
+  default_string_replacer
+  default_hunk_formatter
+
