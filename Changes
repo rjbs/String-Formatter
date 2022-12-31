@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+        - update metadata
 
 1.234     2021-08-28 17:28:18-04:00 America/New_York
         - move bench.pl from dist root so it won't get installed to @INC
